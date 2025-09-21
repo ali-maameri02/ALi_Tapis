@@ -1,13 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import Group
 from .models import User
+from django.contrib.auth.models import Group, Permission
 
-# Unregister the default Group admin if needed
-# admin.site.unregister(Group)
-
-@admin.register(Group)
+# Custom Group Admin to display permissions count
 class GroupAdmin(admin.ModelAdmin):
     list_display = ['name', 'get_permissions_count']
     filter_horizontal = ('permissions',)
@@ -17,6 +14,7 @@ class GroupAdmin(admin.ModelAdmin):
         return obj.permissions.count()
     get_permissions_count.short_description = _('Permissions Count')
 
+# Custom User Admin
 class UserAdmin(BaseUserAdmin):
     model = User
     ordering = ['email']
@@ -31,19 +29,19 @@ class UserAdmin(BaseUserAdmin):
 
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        (_('Personal info'), {'fields': ('name', 'phone')}),
+        (_('Personal info'), {'fields': ('name', 'phone', 'wilaya', 'address')}),
         (_('Permissions'), {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
             'classes': ('collapse', 'wide'),
         }),
-        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+        (_('Important dates'), {'fields': ('last_login',)}),
     )
 
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
             'fields': (
-                'email', 'name', 'phone', 'password1', 'password2',
+                'email', 'name', 'phone', 'wilaya', 'address', 'password1', 'password2',
                 'is_active', 'is_staff', 'is_superuser', 'groups'
             ),
         }),
@@ -53,5 +51,18 @@ class UserAdmin(BaseUserAdmin):
         return ", ".join([group.name for group in obj.groups.all()])
     get_groups.short_description = _('Groups')
 
-
+# Register your models here
 admin.site.register(User, UserAdmin)
+
+# Unregister and re-register Group with custom admin
+admin.site.unregister(Group)  # Unregister first
+admin.site.register(Group, GroupAdmin)
+
+# Add this to your accounts/admin.py if you want to manage permissions directly
+class PermissionAdmin(admin.ModelAdmin):
+    list_display = ['name', 'codename', 'content_type']
+    list_filter = ['content_type']
+    search_fields = ['name', 'codename']
+
+# Then register it (uncomment if you want this)
+admin.site.register(Permission, PermissionAdmin)

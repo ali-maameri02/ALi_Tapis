@@ -58,7 +58,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'drf_yasg',
-
     # Local apps
     'accounts',
     'catalog',
@@ -261,7 +260,7 @@ JAZZMIN_SETTINGS = {
     "hide_models": [],
     
     # List of apps to base side menu ordering off of (does not need to contain all apps)
-    "order_with_respect_to": ["accounts", "catalog", "orders"],
+    "order_with_respect_to": ["auth", "accounts", "catalog", "orders"],
     
     # Custom links to append to app groups, keyed on app name
     # "custom_links": {
@@ -274,10 +273,11 @@ JAZZMIN_SETTINGS = {
     # },
     
     # Custom icons for side menu apps/models
-    "icons": {
+  "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
+        "auth.Permission": "fas fa-lock",
         "accounts.User": "fas fa-user",
         "catalog.Product": "fas fa-box",
         "orders.Order": "fas fa-shopping-cart",
@@ -320,7 +320,7 @@ JAZZMIN_SETTINGS = {
     "changeform_format": "horizontal_tabs",
     
     # override change forms on a per modeladmin basis
-    "changeform_format_overrides": {"auth.user": "collapsible", "auth.group": "vertical_tabs"},
+    # "changeform_format_overrides": {"auth.user": "collapsible", "auth.group": "vertical_tabs"},
     
     # Add a language dropdown into the admin
     # "language_chooser": True,
