@@ -79,7 +79,9 @@ export const Cart = () => {
       id: item.id,
       price: item.price.replace(' DA', ''),
       quantity: item.quantity,
-      wilaya: userData.wilaya
+      wilaya: userData.wilaya,
+      image: item.image, // This is the selected image from the product details
+      color: item.color || '' // Include color if available
     }));
 
     try {
@@ -142,6 +144,9 @@ export const Cart = () => {
                 />
                 <div className="flex-1">
                   <h3 className="font-medium">{item.name}</h3>
+                  {item.color && (
+                    <p className="text-sm text-gray-600">Color: {item.color}</p>
+                  )}
                   <p className="text-white font-bold">{item.price}</p>
                   <div className="flex items-center gap-2 mt-2">
                     <Button 
@@ -210,7 +215,7 @@ export const Cart = () => {
         </div>
       )}
 
-{showOrderForm && (
+      {showOrderForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4 text-gray-900">{t('orderForm.title')}</h2>
@@ -293,7 +298,8 @@ export const Cart = () => {
                     <option value="Naâma">Naâma</option>
                     <option value="Aïn Témouchent">Aïn Témouchent</option>
                     <option value="Ghardaïa">Ghardaïa</option>
-                    <option value="Relizane">Relizane</option>                  </select>
+                    <option value="Relizane">Relizane</option>
+                  </select>
                 </div>
                 
                 <div>
@@ -301,20 +307,19 @@ export const Cart = () => {
                     {t('orderForm.phone')} *
                   </label>
                   <input
-  type="tel"
-  id="phone"
-  value={userData.phone}
-  onChange={(e) => {
-    // Only allow numbers and limit to 10 digits
-    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-    setUserData({...userData, phone: value});
-  }}
-  className="mt-1 block w-full border border-gray-300 rounded-md p-2 text-gray-900 bg-white"
-  required
-  disabled={isSubmitting}
-  pattern="[0-9]{10}"
-  inputMode="numeric"
-/>
+                    type="tel"
+                    id="phone"
+                    value={userData.phone}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setUserData({...userData, phone: value});
+                    }}
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2 text-gray-900 bg-white"
+                    required
+                    disabled={isSubmitting}
+                    pattern="[0-9]{10}"
+                    inputMode="numeric"
+                  />
                 </div>
 
                 <div>

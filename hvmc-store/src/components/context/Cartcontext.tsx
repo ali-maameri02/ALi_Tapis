@@ -1,11 +1,14 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
+// In your CartContext
 type CartItem = {
   id: string;
   name: string;
   price: string;
   image: string;
   quantity: number;
+  color?: string;
+  selectedImage?: string; // Add this field for the specific selected image
 };
 
 type CartContextType = {
@@ -14,7 +17,7 @@ type CartContextType = {
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   cartCount: number;
-  clearCart: () => void; // Added clear cart function
+  clearCart: () => void;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -38,12 +41,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const addToCart = (product: CartItem) => {
     setCartItems(prevItems => {
-      const existingItem = prevItems.find(item => item.id === product.id);
+      const existingItem = prevItems.find(item => 
+        item.id === product.id && item.color === product.color
+      );
       let newItems;
       
       if (existingItem) {
         newItems = prevItems.map(item =>
-          item.id === product.id 
+          item.id === product.id && item.color === product.color
             ? { ...item, quantity: item.quantity + product.quantity }
             : item
         );

@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'drf_yasg',
+        'colorfield',
+
     # Local apps
     'accounts',
     'catalog',

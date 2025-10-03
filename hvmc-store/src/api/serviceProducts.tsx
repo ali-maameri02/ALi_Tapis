@@ -2,11 +2,16 @@
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/fr/api';
+
+// src/services/serviceProducts.tsx
 export interface ProductImage {
   id: number;
   image: string;
   order: number;
+  color: string;  // Make sure this exists
+  color_name: string;  // Make sure this exists
 }
+
 export interface Product {
   id: number;
   name: string;
@@ -14,7 +19,7 @@ export interface Product {
   price: string;
   is_available: boolean;
   created_at: string;
-  image: string;  // Main image (fallback)
+  image: string;
   images: ProductImage[];
   category: {
     id: number;
@@ -43,8 +48,6 @@ export const fetchProductById = async (id: number): Promise<Product> => {
     throw error;
   }
 };
-
-
 
 export const fetchProductsByCategory = async (categoryId: number): Promise<Product[]> => {
   try {

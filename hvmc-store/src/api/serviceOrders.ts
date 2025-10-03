@@ -9,6 +9,7 @@ export interface OrderItem {
   image?: string;
   wilaya?: string;
   address?: string;
+  color?: string;
 }
 
 // Cache user data to avoid repeated localStorage access
@@ -37,7 +38,7 @@ export const submitOrder = async (items: OrderItem | OrderItem[]) => {
       ...basePayload,
       ...item,
       date: timestamp,
-      image: item.image || '/placeholder-product.jpg'
+      image: item.image || '/placeholder-product.jpg' // Use the selected image
     }));
     
     // Update localStorage in one operation
@@ -53,7 +54,9 @@ export const submitOrder = async (items: OrderItem | OrderItem[]) => {
             productname: item.productname,
             id: item.id,
             price: item.price,
-            quantity: item.quantity
+            quantity: item.quantity,
+            image: item.image || '/placeholder-product.jpg', // Add image to payload
+            color: item.color || '' // Add color if available
           };
 
           return fetch("https://script.google.com/macros/s/AKfycbxNzEQn5POG9Ft_djPlbBkAtjQiJ1B9t5JmMROI7CMye7mH9JixIMzB5o_0qXFZnlMTGg/exec", {
@@ -75,13 +78,14 @@ export const submitOrder = async (items: OrderItem | OrderItem[]) => {
       // Single item case
       const item = orders[0];
       const fullPayload = {
-        ...basePayload,
+        ...basePayload,          // name, email, phone, wilaya, address
         productname: item.productname,
         id: item.id,
         price: item.price,
-        quantity: item.quantity
+        quantity: item.quantity,
+        image: item.image || '/placeholder-product.jpg',
+        color: item.color || ''
       };
-
       const response = await fetch("https://script.google.com/macros/s/AKfycbxNzEQn5POG9Ft_djPlbBkAtjQiJ1B9t5JmMROI7CMye7mH9JixIMzB5o_0qXFZnlMTGg/exec", {
         method: "POST",
         headers: {

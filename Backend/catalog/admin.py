@@ -4,14 +4,14 @@ from django.utils.translation import gettext_lazy as _
 from .models import Category, Product, ProductImage
 from django.contrib.auth.models import Group
 
-
 admin.site.unregister(Group)
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'description', 'image_preview')
     search_fields = ('name',)
     ordering = ('name',)
-    readonly_fields = ('image_preview',)  # Make preview visible in edit form
+    readonly_fields = ('image_preview',)
     
     def image_preview(self, obj):
         if obj.image:
@@ -21,13 +21,12 @@ class CategoryAdmin(admin.ModelAdmin):
             )
         return "-"
     image_preview.short_description = _("Image Preview")
-    
-    
+
 class ProductImageInline(admin.TabularInline):
     model = ProductImage
     extra = 1
-    fields = ('image', 'order', 'image_preview')
-    readonly_fields = ('image_preview',)
+    fields = ('image', 'color', 'color_name', 'order', 'image_preview', 'color_preview')
+    readonly_fields = ('image_preview', 'color_preview')
     
     def image_preview(self, obj):
         if obj.image:
@@ -36,7 +35,14 @@ class ProductImageInline(admin.TabularInline):
                 obj.image.url
             )
         return "-"
-    image_preview.short_description = _("Preview")
+    image_preview.short_description = _("Image Preview")
+    
+    def color_preview(self, obj):
+        return format_html(
+            '<div style="width: 30px; height: 30px; background-color: {}; border: 1px solid #ccc; border-radius: 3px;"></div>',
+            obj.color
+        )
+    color_preview.short_description = _("Color")
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -45,9 +51,8 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ('is_available', 'category')
     search_fields = ('name',)
     ordering = ('-created_at',)
-    readonly_fields = ('image_preview',)  # Add this for edit view
+    readonly_fields = ('image_preview',)
     
-    # List view image preview
     def image_preview(self, obj):
         if obj.image:
             return format_html(
@@ -57,13 +62,9 @@ class ProductAdmin(admin.ModelAdmin):
         return "-"
     image_preview.short_description = _("Image Preview")
     
-    # Custom form to show preview when adding/editing
     def get_form(self, request, obj=None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         form.base_fields['image'].help_text = _(
             'After selecting an image, save to see the preview.'
         )
         return form
-    
-    # Custom change form template to better display images
-    change_form_template = 'admin/catalog/product/change_form.html'

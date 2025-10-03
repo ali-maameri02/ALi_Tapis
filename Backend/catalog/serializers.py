@@ -17,7 +17,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
-        fields = ['id', 'image', 'order']
+        fields = ['id', 'image', 'color', 'color_name', 'order'] 
         extra_kwargs = {
             'image': {'label': _("Image")},
         }

@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _  
-
+from colorfield.fields import ColorField  # Add this import
 
 class Category(models.Model):
     name = models.CharField(
@@ -25,6 +25,7 @@ class Category(models.Model):
 
     def __str__(self):
         return str(self.name)
+
 class ProductImage(models.Model):
     product = models.ForeignKey(
         'Product',
@@ -35,6 +36,17 @@ class ProductImage(models.Model):
     image = models.ImageField(
         upload_to='product_images/',
         verbose_name=_("Image")
+    )
+    color = ColorField(
+        default='#FFFFFF',
+        verbose_name=_("Color"),
+        help_text=_("Select the dominant color of this product image")
+    )
+    color_name = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name=_("Color Name"),
+        help_text=_("Optional: Name of the color (e.g., Red, Blue, Black)")
     )
     order = models.PositiveIntegerField(
         default=0,
@@ -47,7 +59,8 @@ class ProductImage(models.Model):
         verbose_name_plural = _("Images du produit")
 
     def __str__(self):
-        return f"Image {self.id} for {self.product.name}"
+        color_display = self.color_name or self.color
+        return f"Image {self.id} for {self.product.name} ({color_display})"
 
 class Product(models.Model):
     category = models.ForeignKey(

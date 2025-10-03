@@ -146,10 +146,10 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   return (
     <>
       <Card 
-        className="hover:shadow-lg transition-all duration-300 shadow-none border-0 group cursor-pointer pt-0 w-full h-full flex flex-col"
+        className="hover:shadow-lg transition-all duration-300 shadow-none border-0 pb-5 group cursor-pointer pt-0 w-full h-full flex flex-col"
         onClick={() => navigate(`/product/${product.id}`)}
       >
-        <CardContent className="p-0 flex flex-col h-full">
+        <CardContent className="p-0 flex flex-col h-full pb-5">
           {/* Image Section */}
           <div className="aspect-[3/4] overflow-hidden rounded-t-lg bg-gray-100 relative">
             <img 
@@ -331,7 +331,8 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                     <option value="Naâma">Naâma</option>
                     <option value="Aïn Témouchent">Aïn Témouchent</option>
                     <option value="Ghardaïa">Ghardaïa</option>
-                    <option value="Relizane">Relizane</option>                  </select>
+                    <option value="Relizane">Relizane</option>
+                  </select>
                 </div>
                 
                 <div>
@@ -339,21 +340,20 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                     {t('orderForm.phone')} *
                   </label>
                   <input
-  type="tel"
-  id="phone"
-  value={userData.phone}
-  onChange={(e) => {
-    // Only allow numbers and limit to 10 digits
-    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-    setUserData({...userData, phone: value});
-  }}
-  className="mt-1 block w-full border border-gray-300 rounded-md p-2 text-gray-900 bg-white"
-  required
-  disabled={isSubmitting}
-  pattern="[0-9]{10}"
-  title="Please enter a 10-digit phone number"
-  inputMode="numeric"
-/>
+                    type="tel"
+                    id="phone"
+                    value={userData.phone}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setUserData({...userData, phone: value});
+                    }}
+                    className="mt-1 block w-full border border-gray-300 rounded-md p-2 text-gray-900 bg-white"
+                    required
+                    disabled={isSubmitting}
+                    pattern="[0-9]{10}"
+                    title="Please enter a 10-digit phone number"
+                    inputMode="numeric"
+                  />
                 </div>
 
                 <div>

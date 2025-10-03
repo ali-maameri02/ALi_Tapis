@@ -1,5 +1,5 @@
 // src/components/Landing/ProductsCategorie.tsx
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { ProductCard } from './ProductCard';
@@ -7,6 +7,7 @@ import { fetchProductsByCategory, type Product } from '@/api/serviceProducts';
 import { catalogService, type Category } from '@/api/catalog';
 import { Skeleton } from '../ui/skeleton';
 import { useTranslation } from 'react-i18next';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export const ProductsCategorie = () => {
   const { t } = useTranslation();
@@ -15,6 +16,7 @@ export const ProductsCategorie = () => {
   const [category, setCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -44,6 +46,18 @@ export const ProductsCategorie = () => {
 
     loadData();
   }, [categoryId, t]);
+
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -300, behavior: 'smooth' });
+    }
+  };
+
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+    }
+  };
 
   if (loading) {
     return (
@@ -100,19 +114,53 @@ export const ProductsCategorie = () => {
             </p>
           )}
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products.map(product => (
-  <ProductCard 
-    key={product.id.toString()}
-    product={{
-      id: product.id.toString(),
-      name: product.name,
-      price: product.price,
-      image: product.image,
-      // Only include properties that ProductCard expects
-    }}
-  />
-))}
+          {/* Horizontal Scroll Container */}
+          <div className="relative">
+            {/* Navigation Buttons */}
+            {products.length > 0 && (
+              <>
+                <button
+                  onClick={scrollLeft}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-black/80 text-white p-2 rounded-full hover:bg-black transition-colors z-10 shadow-lg"
+                  aria-label="Scroll left"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={scrollRight}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-black/80 text-white p-2 rounded-full hover:bg-black transition-colors z-10 shadow-lg"
+                  aria-label="Scroll right"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </>
+            )}
+            
+            {/* Horizontal Scrollable Products */}
+            <div
+              ref={scrollContainerRef}
+              className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide"
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none'
+              }}
+            >
+              {products.map(product => (
+                <div 
+                  key={product.id.toString()} 
+                  className="flex-shrink-0 w-64" // Fixed width for consistent cards
+                >
+                  <ProductCard 
+                    product={{
+                      id: product.id.toString(),
+                      name: product.name,
+                      price: product.price,
+                      image: product.image,
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         </>
       )}

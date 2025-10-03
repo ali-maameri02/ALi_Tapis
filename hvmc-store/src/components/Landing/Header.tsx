@@ -82,7 +82,7 @@ export const Header = () => {
   );
 
   return (
-    <header className="bg-gradient-to-r from-black via-black to-zinc-900 text-white fixed w-full top-0 z-50 shadow-lg">
+    <header className="bg-gradient-to-r from-black via-black to-zinc-900 text-white fixed w-full top-0 z-50 shadow-lg pb-8">
       {/* Top Navigation Bar */}
       <div className="container mx-auto px-4 py-3 pb-0 flex justify-between items-center border-b border-zinc-800">
         <div className="flex items-center gap-4">

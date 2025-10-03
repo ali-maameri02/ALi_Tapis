@@ -462,9 +462,7 @@ export const Footer = () => {
                 {t('header.title')}
               </span>
             </Link>
-            <p className="text-zinc-300 text-sm max-w-md">
-              {t('footer.description')}
-            </p>
+          
             <div className="flex gap-4">
               <a 
                 href="https://www.instagram.com/hamza_hvmc?igsh=aDRmYmIyZXB6ZTl3" 

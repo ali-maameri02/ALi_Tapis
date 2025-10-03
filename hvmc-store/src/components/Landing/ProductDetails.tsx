@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "../ui/button";
 import { ShoppingCart, ArrowLeft, MessageSquare, Phone, Instagram } from "lucide-react";
 import { useCart } from '../context/Cartcontext';
-import { fetchProductById, type Product } from '@/api/serviceProducts';
+import { fetchProductById, type Product, type ProductImage } from '@/api/serviceProducts';
 import { toast } from "sonner";
 import { submitOrder } from '@/api/serviceOrders';
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,7 @@ import { FaTiktok } from 'react-icons/fa';
 import { FaSpinner } from 'react-icons/fa';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import '../../index.css'
+
 interface UserData {
   name: string;
   email: string;
@@ -40,6 +41,9 @@ export const ProductDetails = () => {
     wilaya: '',
     address: ''
   });
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  
   const imgRef = useRef<HTMLImageElement>(null);
   const zoomRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
@@ -49,7 +53,7 @@ export const ProductDetails = () => {
     if (storedUserData) {
       setUserData(JSON.parse(storedUserData));
     }
-
+  
     const loadProduct = async () => {
       try {
         if (!id) {
@@ -58,16 +62,51 @@ export const ProductDetails = () => {
         }
         
         const data = await fetchProductById(Number(id));
+        console.log('Product data:', data); // Add this line
+        console.log('Product images:', data.images); // Add this line
+        
         setProduct(data);
+        
+        // Set initial selected color based on first image
+        if (data.images && data.images.length > 0) {
+          console.log('First image color:', data.images[0].color); // Add this line
+          setSelectedColor(data.images[0].color);
+        }
       } catch (err) {
         setError(t('product.notFound'));
       } finally {
         setLoading(false);
       }
     };
-
+  
     loadProduct();
   }, [id, t]);
+  // Get unique colors from product images
+  const uniqueColors = product?.images?.reduce((acc: Array<{color: string, color_name: string, image: string, id: number}>, image: ProductImage) => {
+    const existingColor = acc.find(item => item.color === image.color && item.color_name === image.color_name);
+    if (!existingColor) {
+      acc.push({
+        color: image.color,
+        color_name: image.color_name,
+        image: image.image,
+        id: image.id
+      });
+    }
+    return acc;
+  }, []) || [];
+
+  // Filter images by selected color
+  const filteredImages = selectedColor 
+    ? product?.images?.filter(img => img.color === selectedColor) || []
+    : product?.images || [];
+
+  // Get current image (fallback to main image if no images array)
+  const currentImage = filteredImages[currentImageIndex]?.image || product?.image;
+
+  // Reset image index when color changes
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [selectedColor]);
 
   const showProductSuccessAlert = () => {
     toast.custom(() => (
@@ -140,12 +179,17 @@ export const ProductDetails = () => {
   const handleAddToCart = () => {
     if (!product) return;
     
+    // Get selected color name for display
+    const selectedColorName = uniqueColors.find((color: {color: string, color_name: string}) => color.color === selectedColor)?.color_name || '';
+    
     addToCart({
       id: product.id.toString(),
       name: product.name,
       price: `${product.price} DA`,
-      image: product.image,
-      quantity: quantity
+      image: currentImage || product.image, // This is the selected image
+      quantity: quantity,
+      color: selectedColorName,
+      selectedImage: currentImage // Store the specific selected image
     });
     
     toast.success(t('cart.added'), {
@@ -192,13 +236,18 @@ export const ProductDetails = () => {
     
     setIsSubmitting(true);
     
+    // Get selected color name for order
+    const selectedColorName = uniqueColors.find((color: {color: string, color_name: string}) => color.color === selectedColor)?.color_name || '';
+    
     try {
       await submitOrder({
         productname: product.name,
         id: product.id.toString(),
         price: product.price,
         quantity: quantity || 1,
-        wilaya: userData.wilaya
+        wilaya: userData.wilaya,
+        image: currentImage, // Send the selected image
+        color: selectedColorName // Send the selected color
       });
       showProductSuccessAlert();
     } catch (error) {
@@ -232,28 +281,29 @@ export const ProductDetails = () => {
     setShowOrderForm(false);
     await proceedWithOrder();
   };
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
-  // Get current image (fallback to main image if no images array)
-  const currentImage = product?.images?.[currentImageIndex]?.image || product?.image;
 
   const handleNextImage = () => {
-    if (!product?.images) return;
+    if (filteredImages.length === 0) return;
     setCurrentImageIndex((prev) => 
-      prev === product.images.length - 1 ? 0 : prev + 1
+      prev === filteredImages.length - 1 ? 0 : prev + 1
     );
   };
 
   const handlePrevImage = () => {
-    if (!product?.images) return;
+    if (filteredImages.length === 0) return;
     setCurrentImageIndex((prev) => 
-      prev === 0 ? product.images.length - 1 : prev - 1
+      prev === 0 ? filteredImages.length - 1 : prev - 1 
     );
   };
 
   const handleThumbnailClick = (index: number) => {
     setCurrentImageIndex(index);
   };
+
+  const handleColorSelect = (color: string) => {
+    setSelectedColor(color);
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
@@ -333,95 +383,132 @@ export const ProductDetails = () => {
         
         <div className="grid md:grid-cols-2 gap-8">
           <div className="grid grid-cols gap-8">
-        <div 
-            className="relative rounded-lg overflow-hidden bg-white h-96 "
-            onMouseEnter={() => setShowZoom(true)}
-            onMouseLeave={() => setShowZoom(false)}
-            onMouseMove={handleMouseMove}
-          >
-            <img
-              ref={imgRef}
-              src={currentImage}
-              alt={product.name}
-              className="w-full h-full object-contain cursor-crosshair"
-            />
-                {product.images && product.images.length > 1 && (
-              <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePrevImage();
-                  }}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/75 transition-colors"
-                  aria-label="Previous image"
-                >
-                  <ChevronLeft className="h-6 w-6" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleNextImage();
-                  }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/75 transition-colors"
-                  aria-label="Next image"
-                >
-                  <ChevronRight className="h-6 w-6" />
-                </button>
-              </>
+            {/* Main image container with relative positioning */}
+            <div className="relative">
+              <div 
+                className="relative rounded-lg overflow-hidden bg-white h-96"
+                onMouseEnter={() => setShowZoom(true)}
+                onMouseLeave={() => setShowZoom(false)}
+                onMouseMove={handleMouseMove}
+              >
+                <img
+                  ref={imgRef}
+                  src={currentImage}
+                  alt={product.name}
+                  className="w-full h-full object-contain cursor-crosshair"
+                />
+                
+                {/* Zoom Overlay */}
+                {showZoom && (
+                  <div 
+                    className="absolute inset-0 pointer-events-none z-10"
+                    style={{
+                      backgroundImage: `url(${currentImage})`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: `${imgRef.current?.offsetWidth ? imgRef.current.offsetWidth * 2 : 0}px ${imgRef.current?.offsetHeight ? imgRef.current.offsetHeight * 2 : 0}px`,
+                      ...zoomStyle
+                    }}
+                  />
+                )}
+                
+                {/* Zoom Lens */}
+                {showZoom && (
+                  <div 
+                    ref={zoomRef}
+                    className="absolute hidden md:block w-32 h-32 rounded-full border-2 border-white bg-white bg-opacity-30 pointer-events-none z-20"
+                    style={{
+                      left: `${cursorPos.x}%`,
+                      top: `${cursorPos.y}%`,
+                      transform: 'translate(-50%, -50%)',
+                      backgroundImage: `url(${currentImage})`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: `${imgRef.current?.offsetWidth ? imgRef.current.offsetWidth * 2 : 0}px ${imgRef.current?.offsetHeight ? imgRef.current.offsetHeight * 2 : 0}px`,
+                      backgroundPosition: `${cursorPos.x}% ${cursorPos.y}%`,
+                    }}
+                  />
+                )}
+              </div>
+              
+              {/* Navigation Buttons - Positioned outside the image container with highest z-index */}
+              {filteredImages.length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePrevImage();
+                    }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-black/80 text-white p-3 rounded-full hover:bg-black transition-colors z-50 shadow-lg"
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNextImage();
+                    }}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 bg-black/80 text-white p-3 rounded-full hover:bg-black transition-colors z-50 shadow-lg"
+                    aria-label="Next image"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                </>
+              )}
+            </div>
+            
+            {/* Color Selection */}
+            {uniqueColors.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-medium text-gray-900">{t('product.selectColor') || 'Select Color'}</h3>
+                <div className="flex flex-wrap gap-3">
+                  {uniqueColors.map((colorObj, index) => (
+                    <button
+                      key={`${colorObj.color}-${colorObj.color_name}-${colorObj.id}`}
+                      onClick={() => handleColorSelect(colorObj.color)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 transition-all ${
+                        selectedColor === colorObj.color
+                          ? 'border-[#d6b66d] bg-[#d6b66d] bg-opacity-10'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                    >
+                      <div 
+                        className="w-6 h-6 rounded-full border border-gray-300"
+                        style={{ backgroundColor: colorObj.color }}
+                      />
+                      <span className="text-sm text-gray-700">
+                        {colorObj.color_name || `Color ${index + 1}`}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
             
-            {showZoom && (
-              <div 
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  backgroundImage: `url(${currentImage})`,  // Changed from product.image to currentImage
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: `${imgRef.current?.offsetWidth ? imgRef.current.offsetWidth * 2 : 0}px ${imgRef.current?.offsetHeight ? imgRef.current.offsetHeight * 2 : 0}px`,
-                  ...zoomStyle
-                }}
-              />
-            )}
-            
-            {showZoom && (
-              <div 
-                ref={zoomRef}
-                className="absolute hidden md:block w-32 h-32 rounded-full border-2 border-white bg-white bg-opacity-30 pointer-events-none"
-                style={{
-                  left: `${cursorPos.x}%`,
-                  top: `${cursorPos.y}%`,
-                  transform: 'translate(-50%, -50%)',
-                  backgroundImage: `url(${currentImage})`,  // Changed from product.image to currentImage
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: `${imgRef.current?.offsetWidth ? imgRef.current.offsetWidth * 2 : 0}px ${imgRef.current?.offsetHeight ? imgRef.current.offsetHeight * 2 : 0}px`,
-                  backgroundPosition: `${cursorPos.x}% ${cursorPos.y}%`,
-                }}
-              />
+            {/* Image Thumbnails */}
+            {filteredImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto py-2">
+                {filteredImages.map((img, index) => (
+                  <button
+                    key={img.id}
+                    onClick={() => handleThumbnailClick(index)}
+                    className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 ${
+                      currentImageIndex === index 
+                        ? 'border-[#d6b66d]' 
+                        : 'border-transparent'
+                    }`}
+                    aria-label={`View image ${index + 1}`}
+                  >
+                    <img
+                      src={img.image}
+                      alt={`${product.name} - ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
             )}
           </div>
-         
-             {product.images && product.images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto py-2">
-              {product.images.map((img, index) => (
-                <button
-                  key={img.id}
-                  onClick={() => handleThumbnailClick(index)}
-                  className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 ${
-                    currentImageIndex === index 
-                      ? 'border-[#d6b66d]' 
-                      : 'border-transparent'
-                  }`}
-                  aria-label={`View image ${index + 1}`}
-                >
-                  <img
-                    src={img.image}
-                    alt={`${product.name} - ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-</div>
+          
           <div className="space-y-6">
             <h1 className="text-3xl font-bold">{product.name}</h1>
             <p className="text-white text-2xl font-bold">{product.price} DA</p>
@@ -483,157 +570,156 @@ export const ProductDetails = () => {
         </div>
 
         {showOrderForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4 text-gray-900">{t('orderForm.title')}</h2>
-            <p className="mb-4 text-gray-600">{t('orderForm.description')}</p>
-            
-            <form onSubmit={handleUserDataSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-900">
-                    {t('orderForm.name')} *
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    value={userData.name}
-                    onChange={(e) => setUserData({...userData, name: e.target.value})}
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2 text-gray-900 bg-white"
-                    required
-                    disabled={isSubmitting}
-                  />
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+              <h2 className="text-xl font-bold mb-4 text-gray-900">{t('orderForm.title')}</h2>
+              <p className="mb-4 text-gray-600">{t('orderForm.description')}</p>
+              
+              <form onSubmit={handleUserDataSubmit}>
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-900">
+                      {t('orderForm.name')} *
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      value={userData.name}
+                      onChange={(e) => setUserData({...userData, name: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md p-2 text-gray-900 bg-white"
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="wilaya" className="block text-sm font-medium text-gray-900">
+                      {t('orderForm.wilaya')} *
+                    </label>
+                    <select
+                      id="wilaya"
+                      value={userData.wilaya || ''}
+                      onChange={(e) => setUserData({...userData, wilaya: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md p-2 text-gray-900 bg-white"
+                      required
+                      disabled={isSubmitting}
+                    >
+                      <option value="">{t('orderForm.selectWilaya')}</option>
+                      <option value="Adrar">Adrar</option>
+                      <option value="Chlef">Chlef</option>
+                      <option value="Laghouat">Laghouat</option>
+                      <option value="Oum El Bouaghi">Oum El Bouaghi</option>
+                      <option value="Batna">Batna</option>
+                      <option value="Béjaïa">Béjaïa</option>
+                      <option value="Biskra">Biskra</option>
+                      <option value="Béchar">Béchar</option>
+                      <option value="Blida">Blida</option>
+                      <option value="Bouira">Bouira</option>
+                      <option value="Tamanrasset">Tamanrasset</option>
+                      <option value="Tébessa">Tébessa</option>
+                      <option value="Tlemcen">Tlemcen</option>
+                      <option value="Tiaret">Tiaret</option>
+                      <option value="Tizi Ouzou">Tizi Ouzou</option>
+                      <option value="Alger">Alger</option>
+                      <option value="Djelfa">Djelfa</option>
+                      <option value="Jijel">Jijel</option>
+                      <option value="Sétif">Sétif</option>
+                      <option value="Saïda">Saïda</option>
+                      <option value="Skikda">Skikda</option>
+                      <option value="Sidi Bel Abbès">Sidi Bel Abbès</option>
+                      <option value="Annaba">Annaba</option>
+                      <option value="Guelma">Guelma</option>
+                      <option value="Constantine">Constantine</option>
+                      <option value="Médéa">Médéa</option>
+                      <option value="Mostaganem">Mostaganem</option>
+                      <option value="M'Sila">M'Sila</option>
+                      <option value="Mascara">Mascara</option>
+                      <option value="Ouargla">Ouargla</option>
+                      <option value="Oran">Oran</option>
+                      <option value="El Bayadh">El Bayadh</option>
+                      <option value="Illizi">Illizi</option>
+                      <option value="Bordj Bou Arréridj">Bordj Bou Arréridj</option>
+                      <option value="Boumerdès">Boumerdès</option>
+                      <option value="El Tarf">El Tarf</option>
+                      <option value="Tindouf">Tindouf</option>
+                      <option value="Tissemsilt">Tissemsilt</option>
+                      <option value="El Oued">El Oued</option>
+                      <option value="Khenchela">Khenchela</option>
+                      <option value="Souk Ahras">Souk Ahras</option>
+                      <option value="Tipaza">Tipaza</option>
+                      <option value="Mila">Mila</option>
+                      <option value="Aïn Defla">Aïn Defla</option>
+                      <option value="Naâma">Naâma</option>
+                      <option value="Aïn Témouchent">Aïn Témouchent</option>
+                      <option value="Ghardaïa">Ghardaïa</option>
+                      <option value="Relizane">Relizane</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="phone" className="block text-sm font-medium text-gray-900">
+                      {t('orderForm.phone')} *
+                    </label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      value={userData.phone}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setUserData({...userData, phone: value});
+                      }}
+                      className="mt-1 block w-full border border-gray-300 rounded-md p-2 text-gray-900 bg-white"
+                      required
+                      disabled={isSubmitting}
+                      pattern="[0-9]{10}"
+                      inputMode="numeric"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="address" className="block text-sm font-medium text-gray-900">
+                      {t('orderForm.address')}
+                    </label>
+                    <textarea
+                      id="address"
+                      value={userData.address || ''}
+                      onChange={(e) => setUserData({...userData, address: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md p-2 text-gray-900 bg-white"
+                      rows={2}
+                      disabled={isSubmitting}
+                    />
+                  </div>
                 </div>
                 
-                <div>
-                  <label htmlFor="wilaya" className="block text-sm font-medium text-gray-900">
-                    {t('orderForm.wilaya')} *
-                  </label>
-                  <select
-                    id="wilaya"
-                    value={userData.wilaya || ''}
-                    onChange={(e) => setUserData({...userData, wilaya: e.target.value})}
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2 text-gray-900 bg-white"
-                    required
+                <div className="mt-6 flex justify-end gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="text-gray-900 border-gray-300 hover:bg-gray-100 text-sm sm:text-base"
+                    onClick={() => setShowOrderForm(false)}
                     disabled={isSubmitting}
                   >
-                    <option value="">{t('orderForm.selectWilaya')}</option>
-                    <option value="Adrar">Adrar</option>
-                    <option value="Chlef">Chlef</option>
-                    <option value="Laghouat">Laghouat</option>
-                    <option value="Oum El Bouaghi">Oum El Bouaghi</option>
-                    <option value="Batna">Batna</option>
-                    <option value="Béjaïa">Béjaïa</option>
-                    <option value="Biskra">Biskra</option>
-                    <option value="Béchar">Béchar</option>
-                    <option value="Blida">Blida</option>
-                    <option value="Bouira">Bouira</option>
-                    <option value="Tamanrasset">Tamanrasset</option>
-                    <option value="Tébessa">Tébessa</option>
-                    <option value="Tlemcen">Tlemcen</option>
-                    <option value="Tiaret">Tiaret</option>
-                    <option value="Tizi Ouzou">Tizi Ouzou</option>
-                    <option value="Alger">Alger</option>
-                    <option value="Djelfa">Djelfa</option>
-                    <option value="Jijel">Jijel</option>
-                    <option value="Sétif">Sétif</option>
-                    <option value="Saïda">Saïda</option>
-                    <option value="Skikda">Skikda</option>
-                    <option value="Sidi Bel Abbès">Sidi Bel Abbès</option>
-                    <option value="Annaba">Annaba</option>
-                    <option value="Guelma">Guelma</option>
-                    <option value="Constantine">Constantine</option>
-                    <option value="Médéa">Médéa</option>
-                    <option value="Mostaganem">Mostaganem</option>
-                    <option value="M'Sila">M'Sila</option>
-                    <option value="Mascara">Mascara</option>
-                    <option value="Ouargla">Ouargla</option>
-                    <option value="Oran">Oran</option>
-                    <option value="El Bayadh">El Bayadh</option>
-                    <option value="Illizi">Illizi</option>
-                    <option value="Bordj Bou Arréridj">Bordj Bou Arréridj</option>
-                    <option value="Boumerdès">Boumerdès</option>
-                    <option value="El Tarf">El Tarf</option>
-                    <option value="Tindouf">Tindouf</option>
-                    <option value="Tissemsilt">Tissemsilt</option>
-                    <option value="El Oued">El Oued</option>
-                    <option value="Khenchela">Khenchela</option>
-                    <option value="Souk Ahras">Souk Ahras</option>
-                    <option value="Tipaza">Tipaza</option>
-                    <option value="Mila">Mila</option>
-                    <option value="Aïn Defla">Aïn Defla</option>
-                    <option value="Naâma">Naâma</option>
-                    <option value="Aïn Témouchent">Aïn Témouchent</option>
-                    <option value="Ghardaïa">Ghardaïa</option>
-                    <option value="Relizane">Relizane</option>                  </select>
-                </div>
-                
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-900">
-                    {t('orderForm.phone')} *
-                  </label>
-                  <input
-  type="tel"
-  id="phone"
-  value={userData.phone}
-  onChange={(e) => {
-    // Only allow numbers and limit to 10 digits
-    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
-    setUserData({...userData, phone: value});
-  }}
-  className="mt-1 block w-full border border-gray-300 rounded-md p-2 text-gray-900 bg-white"
-  required
-  disabled={isSubmitting}
-  pattern="[0-9]{10}"
-  title="Please enter a 10-digit phone number"
-  inputMode="numeric"
-/>
-                </div>
-
-                <div>
-                  <label htmlFor="address" className="block text-sm font-medium text-gray-900">
-                    {t('orderForm.address')}
-                  </label>
-                  <textarea
-                    id="address"
-                    value={userData.address || ''}
-                    onChange={(e) => setUserData({...userData, address: e.target.value})}
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2 text-gray-900 bg-white"
-                    rows={2}
+                    {t('common.cancel')}
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-[#d6b66d] hover:bg-[#c9a95d] text-gray-900 text-sm sm:text-base"
                     disabled={isSubmitting}
-                  />
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <FaSpinner className="mr-2 h-4 w-4 animate-spin" />
+                        {t('order.submitting')}
+                      </>
+                    ) : (
+                      t('orderForm.submitOrder')
+                    )}
+                  </Button>
                 </div>
-              </div>
-              
-              <div className="mt-6 flex justify-end gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="text-gray-900 border-gray-300 hover:bg-gray-100 text-sm sm:text-base"
-                  onClick={() => setShowOrderForm(false)}
-                  disabled={isSubmitting}
-                >
-                  {t('common.cancel')}
-                </Button>
-                <Button
-                  type="submit"
-                  className="bg-[#d6b66d] hover:bg-[#c9a95d] text-gray-900 text-sm sm:text-base"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <FaSpinner className="mr-2 h-4 w-4 animate-spin" />
-                      {t('order.submitting')}
-                    </>
-                  ) : (
-                    t('orderForm.submitOrder')
-                  )}
-                </Button>
-              </div>
-            </form>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
       <Footer />
     </>
