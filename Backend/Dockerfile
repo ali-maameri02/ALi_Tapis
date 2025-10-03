@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --upgrade pip
 COPY requirements.txt .
 RUN pip install -r requirements.txt gunicorn  # Explicitly install gunicorn
-
+RUN pip install -r requirements.txt django-colorfield  # Explicitly install gunicorn
 WORKDIR /app
 COPY . .
 
