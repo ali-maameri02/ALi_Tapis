@@ -50,7 +50,7 @@ export const SearchCategories = () => {
 
   if (loading) {
     return (
-      <section className="px-4 py-6 space-y-6 bg-gradient-to-r from-black via-black to-zinc-900 mt-96">
+      <section className="px-4   bg-gradient-to-r from-black via-black to-zinc-900 ">
         <div className="flex justify-center">
           <div className="relative w-full max-w-7xl mx-auto">
             {/* Navigation Buttons Skeleton */}
@@ -69,7 +69,7 @@ export const SearchCategories = () => {
   }
 
   return (
-    <section className="px-4 py-6 space-y-6 bg-gradient-to-r from-black via-black to-zinc-900 mt-52">
+    <section className="px-4  space-y-2 bg-gradient-to-r from-black via-black to-zinc-900 mt-">
       <div className="flex justify-center">
         <div className="relative w-full max-w-7xl mx-auto">
           {/* Navigation Buttons */}

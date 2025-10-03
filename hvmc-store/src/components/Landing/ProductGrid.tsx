@@ -51,7 +51,7 @@ export const ProductGrid = () => {
   }
 
   return (
-    <section className="container px-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+    <section className="container px-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-5">
       {filteredProducts.length > 0 ? (
         filteredProducts.map((product) => (
           <ProductCard 

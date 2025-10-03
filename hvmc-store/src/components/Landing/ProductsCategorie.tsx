@@ -89,13 +89,13 @@ export const ProductsCategorie = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 mt-24">
+    <div className="container  px-4 ">
       <h1 className="text-3xl font-bold mb-8">
         {category?.name || t('titles.categoryProducts')}
       </h1>
       
       {products.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="text-center py-5">
           <h2 className="text-xl font-medium mb-2">{t('messages.noProducts')}</h2>
           <p className="text-gray-500 mb-6">
             {category 

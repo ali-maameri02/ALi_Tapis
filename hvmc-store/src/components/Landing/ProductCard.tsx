@@ -146,12 +146,12 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   return (
     <>
       <Card 
-        className="hover:shadow-lg transition-all duration-300 shadow-none border-0 pb-5 group cursor-pointer pt-0 w-full h-full flex flex-col"
+        className="hover:shadow-lg transition-all duration-300 shadow-none border-0 pb-3 group cursor-pointer pt-0 w-full h-full flex flex-col max-w-[180px] mx-auto"
         onClick={() => navigate(`/product/${product.id}`)}
       >
-        <CardContent className="p-0 flex flex-col h-full pb-5">
-          {/* Image Section */}
-          <div className="aspect-[3/4] overflow-hidden rounded-t-lg bg-gray-100 relative">
+        <CardContent className="p-0 flex flex-col h-full pb-3">
+          {/* Image Section - Optimized for small cards */}
+          <div className="aspect-[5/4] overflow-hidden rounded-t-lg bg-gray-100 relative">
             <img 
               src={product.image} 
               alt={`${product.name} - ${product.category}`}
@@ -159,9 +159,9 @@ export const ProductCard = ({ product }: ProductCardProps) => {
               loading="lazy"
             />
             {/* Quick quantity selector for mobile */}
-            <div className="absolute bottom-2 right-2 sm:hidden bg-white/90 rounded-full flex items-center px-2 py-1 shadow-sm">
+            <div className="absolute bottom-1 right-1 sm:hidden bg-white/90 rounded-full flex items-center px-1 py-0.5 shadow-sm text-xs">
               <button 
-                className="px-1 text-sm font-bold"
+                className="px-0.5 font-bold text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   setQuantity(q => Math.max(1, q - 1));
@@ -169,9 +169,9 @@ export const ProductCard = ({ product }: ProductCardProps) => {
               >
                 -
               </button>
-              <span className="mx-1 text-sm min-w-[20px] text-center">{quantity}</span>
+              <span className="mx-0.5 text-xs min-w-[16px] text-center">{quantity}</span>
               <button 
-                className="px-1 text-sm font-bold"
+                className="px-0.5 font-bold text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   setQuantity(q => q + 1);
@@ -182,20 +182,20 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             </div>
           </div>
           
-          {/* Content Section */}
-          <div className="p-3 flex flex-col flex-grow">
+          {/* Content Section - Compact layout */}
+          <div className="p-2 flex flex-col flex-grow">
             <div className="flex-grow">
-              <h3 className="font-semibold text-sm sm:text-base line-clamp-2">{product.name}</h3>
-              <p className="text-xs text-gray-500 mt-1">{product.category}</p>
-              <p className="font-bold mt-2 text-primary text-sm sm:text-base">{product.price} DA</p>
+              <h3 className="font-semibold text-xs line-clamp-2 leading-tight mb-1">{product.name}</h3>
+              <p className="text-[10px] text-gray-500 mb-1">{product.category}</p>
+              <p className="font-bold text-primary text-xs">{product.price} DA</p>
             </div>
             
             {/* Quantity Selector - Desktop */}
-            <div className="mt-2 sm:mt-3 hidden sm:flex items-center gap-2">
-              <div className="flex items-center border rounded-lg overflow-hidden">
+            <div className="mt-1 hidden sm:flex items-center gap-1">
+              <div className="flex items-center border rounded-md overflow-hidden text-xs">
                 <Button 
                   variant="ghost" 
-                  className="h-8 w-8 p-0 text-xs sm:text-sm"
+                  className="h-6 w-6 p-0 text-xs min-w-6"
                   onClick={(e) => {
                     e.stopPropagation();
                     setQuantity(q => Math.max(1, q - 1));
@@ -203,10 +203,10 @@ export const ProductCard = ({ product }: ProductCardProps) => {
                 >
                   -
                 </Button>
-                <span className="w-8 text-center text-xs sm:text-sm">{quantity}</span>
+                <span className="w-6 text-center text-xs">{quantity}</span>
                 <Button 
                   variant="ghost" 
-                  className="h-8 w-8 p-0 text-xs sm:text-sm"
+                  className="h-6 w-6 p-0 text-xs min-w-6"
                   onClick={(e) => {
                     e.stopPropagation();
                     setQuantity(q => q + 1);
@@ -217,25 +217,25 @@ export const ProductCard = ({ product }: ProductCardProps) => {
               </div>
             </div>
             
-            {/* Buttons */}
-            <div className="mt-3 flex flex-col sm:flex-col gap-2">
+            {/* Buttons - Compact */}
+            <div className="mt-2 flex flex-col gap-1">
               <Button 
                 variant="outline" 
-                className="gap-1 sm:gap-2 flex-1 text-white bg-black hover:bg-[#d6b66d] hover:text-black cursor-pointer text-xs sm:text-sm h-9 sm:h-10"
+                className="gap-1 text-white bg-black hover:bg-[#d6b66d] hover:text-black cursor-pointer text-xs h-7"
                 onClick={handleAddToCart}
               >
-                <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
+                <ShoppingCart className="h-3 w-3" />
                 {t('product.addToCart')}
               </Button>
               
               <Button 
-                className="gap-1 sm:gap-2 flex-1 bg-[#d6b66d] hover:bg-[#c9a95d] text-black text-xs sm:text-sm h-9 sm:h-10"
+                className="gap-1 bg-[#d6b66d] hover:bg-[#c9a95d] text-black text-xs h-7"
                 onClick={handleOrderNow}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <>
-                    <FaSpinner className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                    <FaSpinner className="h-3 w-3 animate-spin" />
                     {t('order.submitting')}
                   </>
                 ) : (
