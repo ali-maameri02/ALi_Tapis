@@ -80,8 +80,11 @@ export const Cart = () => {
       price: item.price.replace(' DA', ''),
       quantity: item.quantity,
       wilaya: userData.wilaya,
-      image: item.image, // This is the selected image from the product details
-      color: item.color || '' // Include color if available
+      image: item.image,
+      color: item.color || '',
+      hauteur: item.hauteur || undefined,
+      largeur: item.largeur || undefined,
+      carr: item.carr || undefined
     }));
 
     try {
@@ -145,7 +148,15 @@ export const Cart = () => {
                 <div className="flex-1">
                   <h3 className="font-medium">{item.name}</h3>
                   {item.color && (
-                    <p className="text-sm text-gray-600">Color: {item.color}</p>
+                    <p className="text-sm text-gray-600">Couleur: {item.color}</p>
+                  )}
+                  {/* Show measurements if they exist */}
+                  {(item.hauteur || item.largeur || item.carr) && (
+                    <div className="text-sm text-gray-600 mt-1">
+                      {item.hauteur && <span>Hauteur: {item.hauteur}cm </span>}
+                      {item.largeur && <span>Largeur: {item.largeur}cm </span>}
+                      {item.carr && <span>Carré: {item.carr}cm</span>}
+                    </div>
                   )}
                   <p className="text-white font-bold">{item.price}</p>
                   <div className="flex items-center gap-2 mt-2">

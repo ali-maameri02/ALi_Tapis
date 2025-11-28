@@ -36,8 +36,8 @@ urlpatterns = [
     # Auth and OAuth
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('oauth2init/', order_views.oauth2_init, name='oauth2_init'),
-    path('oauth2callback/', order_views.oauth2_callback, name='oauth2_callback'),
+    # path('oauth2init/', order_views.oauth2_init, name='oauth2_init'),
+    # path('oauth2callback/', order_views.oauth2_callback, name='oauth2_callback'),
 
     # Swagger docs
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

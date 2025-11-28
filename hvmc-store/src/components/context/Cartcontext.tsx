@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
-// In your CartContext
+// CartContext - Update CartItem type
 type CartItem = {
   id: string;
   name: string;
@@ -8,9 +8,11 @@ type CartItem = {
   image: string;
   quantity: number;
   color?: string;
-  selectedImage?: string; // Add this field for the specific selected image
+  selectedImage?: string;
+  hauteur?: number | string;  // Add measurement fields
+  largeur?: number | string;
+  carr?: number | string;
 };
-
 type CartContextType = {
   cartItems: CartItem[];
   addToCart: (product: CartItem) => void;

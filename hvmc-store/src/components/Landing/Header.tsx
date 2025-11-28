@@ -1,7 +1,8 @@
 import {  Search, ShoppingCart, User } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import logo from '@/assets/5.svg';
+import logo from '@/assets/photo_de_profile-removebg-preview.png';
+import cover from '@/assets/cover page ali.jpg';
 import { useCart } from '../context/Cartcontext';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -87,7 +88,7 @@ export const Header = () => {
       <div className="container mx-auto px-4 py-3 pb-0 flex justify-between items-center border-b border-zinc-800">
         <div className="flex items-center gap-4">
           <Link to="/" className="flex items-center  gap-2">
-<img src={logo}  />
+<img src={logo} width={100} height={150} />
 
 
           <span className="font-light text-sm hidden md:block text-zinc-300">
@@ -235,27 +236,35 @@ export const Header = () => {
 
       {/* Hero Section - Only on homepage */}
       {location.pathname === '/' && (
-        <div className="container mx-auto px-4 py-0 flex flex-col items-center mt-16">
-          {/* <h1 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-center">
-            {t('home.title')}
-          </h1> */}
-          <p className="text-lg md:text-xl mb-8 text-center max-w-2xl text-zinc-300">
-            {t('home.subtitle')}
-          </p>
+  <div
+    className="
+      container mx-auto px-4 py-0 flex flex-col items-center mt-16 
+      bg-cover bg-center md:bg-top  
+      min-h-[50vh] md:min-h-[70vh] lg:h-100
+      relative
+    "
+    style={{
+      backgroundImage: `url(${cover})`,
+      backgroundRepeat: 'no-repeat',
+    }}
+  >
+    <p className="text-lg md:text-xl mb-8 text-center max-w-2xl text-zinc-300">
+      {t('home.subtitle')}
+    </p>
 
-          {/* Search Bar */}
-          <div className="relative w-full max-w-2xl">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
-            <Input
-    type="search"
-    placeholder={t('home.searchPlaceholder')}
-    className="pl-10 py-6 rounded-full bg-zinc-100 border-0 focus-visible:ring-2 focus-visible:ring-primary/50 text-black"
-    value={searchQuery}
-    onChange={handleSearchChange}
-  />
-          </div>
-        </div>
-      )}
+    {/* Search Bar */}
+    <div className="relative w-full max-w-2xl ">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
+      <Input
+        type="search"
+        placeholder={t('home.searchPlaceholder')}
+        className="pl-10 py-6 rounded-full bg-zinc-100 border-0 focus-visible:ring-2 focus-visible:ring-primary/50 text-black"
+        value={searchQuery}
+        onChange={handleSearchChange}
+      />
+    </div>
+  </div>
+)}
 
       {/* Auth Modal */}
       <AuthModal

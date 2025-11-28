@@ -1,6 +1,6 @@
 {
   "header": {
-    "title": "Fournisseur de matériel professionnel pour salons de coiffure",
+    "title": "Un magasin spécialisé dans la vente de tapis, d'articles d'ameublement et de rideaux.",
     "cartEmpty": "Votre panier est vide",
     "cartTitle": "Votre Panier",
     "viewCart": "Voir le panier",
@@ -12,7 +12,7 @@
   "home": {
     "title": "H-VMC",
     "subtitle": "Qualité – Confiance – Innovation – Élégance professionnelle",
-    "searchPlaceholder": "Rechercher des équipements professionnels..."
+    "searchPlaceholder": "Rechercher tapis, d'articles d'ameublement ,  rideaux...."
   },
   "auth": {
     "login": {

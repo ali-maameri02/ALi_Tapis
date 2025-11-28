@@ -118,7 +118,8 @@ DATABASES = {
 CORS_ALLOWED_ORIGINS = [
     "https://www.hvmc.store",
     "https://hvmc.store",
-    "http://localhost:5173"
+    "http://localhost:5173",
+    "http://localhost:5174"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -142,11 +143,12 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_TRUSTED_ORIGINS = [
     "https://hvmc.store",
     "https://www.hvmc.store",
-    "http://localhost:5173"
+    "http://localhost:5173",
+    'http://localhost:5174'
 ]
 
 # Language settings
-LANGUAGE_CODE = 'en'
+LANGUAGE_CODE = 'fr'
 LANGUAGES = [
     ('en', 'English'),
     ('fr', 'French'),
@@ -182,7 +184,8 @@ CORS_ALLOW_CREDENTIALS = True  # Add this line
 CSRF_TRUSTED_ORIGINS = [
     "https://hvmc.store",
     "https://www.hvmc.store",
-    "http://localhost:5173"
+    "http://localhost:5173",
+    'http://localhost:5174'
 ]
 # CSRF_TRUSTED_ORIGINS = [
 #     "http://localhost:5173",  # Also add to CSRF trusted origins
@@ -359,7 +362,9 @@ JAZZMIN_UI_TWEAKS = {
         "danger": "btn-outline-danger",
         "success": "btn-outline-success"
     },
-    "actions_sticky_top": False
+    "actions_sticky_top": False,
+        "language_chooser": True,  # enables language switcher
+
 }
 
 # ... (rest of your existing settings remain the same)

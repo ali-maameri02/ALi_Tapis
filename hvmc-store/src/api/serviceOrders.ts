@@ -1,5 +1,7 @@
+// serviceOrders.ts
 import { toast } from "sonner";
-
+import { apiClient } from './auth';
+// serviceOrders.ts - Update OrderItem interface
 export interface OrderItem {
   productname: string;
   id: string;
@@ -10,8 +12,10 @@ export interface OrderItem {
   wilaya?: string;
   address?: string;
   color?: string;
+  hauteur?: number | string;  // Add measurement fields
+  largeur?: number | string;
+  carr?: number | string;
 }
-
 // Cache user data to avoid repeated localStorage access
 let cachedUserData: any = null;
 
@@ -38,72 +42,59 @@ export const submitOrder = async (items: OrderItem | OrderItem[]) => {
       ...basePayload,
       ...item,
       date: timestamp,
-      image: item.image || '/placeholder-product.jpg' // Use the selected image
+      image: item.image || '/placeholder-product.jpg'
     }));
     
     // Update localStorage in one operation
     const existingOrders = JSON.parse(localStorage.getItem("userOrders") || "[]");
     localStorage.setItem("userOrders", JSON.stringify([...existingOrders, ...ordersWithDate]));
     
-    // Use Promise.all for parallel requests if multiple items
-    if (orders.length > 1) {
-      const responses = await Promise.all(
-        orders.map(item => {
-          const fullPayload = {
-            ...basePayload,
-            productname: item.productname,
-            id: item.id,
-            price: item.price,
-            quantity: item.quantity,
-            image: item.image || '/placeholder-product.jpg', // Add image to payload
-            color: item.color || '' // Add color if available
-          };
-
-          return fetch("https://script.google.com/macros/s/AKfycbxNzEQn5POG9Ft_djPlbBkAtjQiJ1B9t5JmMROI7CMye7mH9JixIMzB5o_0qXFZnlMTGg/exec", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: JSON.stringify(fullPayload),
-          });
-        })
-      );
-
-      // Check all responses
-      const allSuccessful = responses.every(response => response.ok);
-      if (!allSuccessful) {
-        throw new Error("Some orders failed to submit");
-      }
-    } else {
-      // Single item case
-      const item = orders[0];
-      const fullPayload = {
-        ...basePayload,          // name, email, phone, wilaya, address
-        productname: item.productname,
-        id: item.id,
-        price: item.price,
+    // Prepare order payload for API
+    const orderPayload = {
+      is_sent: false,
+      items: orders.map(item => ({
+        product: parseInt(item.id),
         quantity: item.quantity,
-        image: item.image || '/placeholder-product.jpg',
-        color: item.color || ''
-      };
-      const response = await fetch("https://script.google.com/macros/s/AKfycbxNzEQn5POG9Ft_djPlbBkAtjQiJ1B9t5JmMROI7CMye7mH9JixIMzB5o_0qXFZnlMTGg/exec", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        body: JSON.stringify(fullPayload),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-    }
+        product_name: item.productname,
+        price: typeof item.price === 'number' ? item.price : parseFloat(item.price as string),
+        color: item.color || '',
+        hauteur: item.hauteur ? parseFloat(item.hauteur as string) : null,  // Add measurements
+        largeur: item.largeur ? parseFloat(item.largeur as string) : null,
+        carr: item.carr ? parseFloat(item.carr as string) : null
+      })),
+      guest_email: basePayload.email,
+      guest_name: basePayload.name,
+      guest_phone: basePayload.phone,
+      guest_wilaya: basePayload.wilaya,
+      guest_address: basePayload.address
+    };
 
+    // Use apiClient which automatically handles auth tokens and CSRF
+    const response = await apiClient.post('/orders/', orderPayload);
+    
+    console.log("Order submitted successfully:", response.data);
+    
     toast.success("Commande(s) bien enregistrée(s) !");
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Erreur lors de la commande :", error);
-    toast.error("Échec de l'envoi de la commande.");
+    
+    // More specific error messages
+    if (error.response?.status === 400) {
+      const errorData = error.response.data;
+      if (typeof errorData === 'object') {
+        // Handle field-specific errors
+        const errorMessages = Object.values(errorData).flat().join(', ');
+        toast.error(`Données invalides: ${errorMessages}`);
+      } else {
+        toast.error("Données de commande invalides.");
+      }
+    } else if (error.response?.status === 404) {
+      toast.error("Endpoint de commande non trouvé.");
+    } else {
+      toast.error("Échec de l'envoi de la commande.");
+    }
+    
     return false;
   }
 };
@@ -129,5 +120,16 @@ export const getLocalOrders = (): OrderItem[] => {
   } catch (error) {
     console.error("Error reading orders from localStorage:", error);
     return [];
+  }
+};
+
+// New function to get orders from API (for authenticated users)
+export const getApiOrders = async () => {
+  try {
+    const response = await apiClient.get('/orders/');
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching orders from API:", error);
+    throw error;
   }
 };

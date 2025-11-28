@@ -43,6 +43,11 @@ export const ProductDetails = () => {
   });
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
+  const [measurements, setMeasurements] = useState({
+    hauteur: '',
+    largeur: '',
+    carr: ''
+  });
   
   const imgRef = useRef<HTMLImageElement>(null);
   const zoomRef = useRef<HTMLDivElement>(null);
@@ -62,14 +67,14 @@ export const ProductDetails = () => {
         }
         
         const data = await fetchProductById(Number(id));
-        console.log('Product data:', data); // Add this line
-        console.log('Product images:', data.images); // Add this line
+        console.log('Product data:', data);
+        console.log('Product images:', data.images);
         
         setProduct(data);
         
         // Set initial selected color based on first image
         if (data.images && data.images.length > 0) {
-          console.log('First image color:', data.images[0].color); // Add this line
+          console.log('First image color:', data.images[0].color);
           setSelectedColor(data.images[0].color);
         }
       } catch (err) {
@@ -81,6 +86,7 @@ export const ProductDetails = () => {
   
     loadProduct();
   }, [id, t]);
+
   // Get unique colors from product images
   const uniqueColors = product?.images?.reduce((acc: Array<{color: string, color_name: string, image: string, id: number}>, image: ProductImage) => {
     const existingColor = acc.find(item => item.color === image.color && item.color_name === image.color_name);
@@ -186,11 +192,17 @@ export const ProductDetails = () => {
       id: product.id.toString(),
       name: product.name,
       price: `${product.price} DA`,
-      image: currentImage || product.image, // This is the selected image
+      image: currentImage || product.image,
       quantity: quantity,
       color: selectedColorName,
-      selectedImage: currentImage // Store the specific selected image
+      selectedImage: currentImage,
+      hauteur: measurements.hauteur || undefined,
+      largeur: measurements.largeur || undefined,
+      carr: measurements.carr || undefined
     });
+    
+    // Reset measurements after adding to cart
+    setMeasurements({ hauteur: '', largeur: '', carr: '' });
     
     toast.success(t('cart.added'), {
       description: t('cart.addedDescription'),
@@ -246,8 +258,11 @@ export const ProductDetails = () => {
         price: product.price,
         quantity: quantity || 1,
         wilaya: userData.wilaya,
-        image: currentImage, // Send the selected image
-        color: selectedColorName // Send the selected color
+        image: currentImage,
+        color: selectedColorName,
+        hauteur: measurements.hauteur || undefined,
+        largeur: measurements.largeur || undefined,
+        carr: measurements.carr || undefined
       });
       showProductSuccessAlert();
     } catch (error) {
@@ -304,6 +319,13 @@ export const ProductDetails = () => {
     setSelectedColor(color);
   };
 
+  const handleMeasurementChange = (field: string, value: string) => {
+    setMeasurements(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
@@ -328,7 +350,7 @@ export const ProductDetails = () => {
       <div className="container mx-auto px-4 py-8 mt-8 relative">
         <div className="fixed right-4 bottom-4 z-40 flex flex-col gap-3">
           <a 
-            href="https://wa.me/213541779717" 
+            href="https://wa.me/213557098663" 
             target="_blank" 
             rel="noopener noreferrer"
             className="bg-green-500 text-white p-3 rounded-full shadow-lg hover:bg-green-600 transition-colors animate-float"
@@ -337,7 +359,7 @@ export const ProductDetails = () => {
             <MessageSquare className="h-6 w-6" />
           </a>
           <a
-            href="https://m.me/100069071041741"
+            href="https://m.me/100063534282260"
             target="_blank"
             rel="noopener noreferrer"
             className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors animate-float delay-100"
@@ -345,7 +367,7 @@ export const ProductDetails = () => {
           >
             <MessageSquare className="h-6 w-6" />
           </a>
-          <a
+          {/* <a
             href="https://www.instagram.com/hamza_hvmc"
             target="_blank"
             rel="noopener noreferrer"
@@ -353,8 +375,8 @@ export const ProductDetails = () => {
             aria-label="Visit Instagram"
           >
             <Instagram className="h-6 w-6" />
-          </a>
-          <a
+          </a> */}
+          {/* <a
             href="https://www.tiktok.com/@hamza_hvmc?_t=ZS-8yxWaAzR9g8&_r=1"
             target="_blank"
             rel="noopener noreferrer"
@@ -362,9 +384,9 @@ export const ProductDetails = () => {
             aria-label="Visit TikTok"
           >
             <FaTiktok className="h-6 w-6" />
-          </a>
+          </a> */}
           <a
-            href="tel:+213541779717"
+            href="tel:+213557098663"
             className="bg-[#d6b66d] text-black p-3 rounded-full shadow-lg hover:bg-[#c9a95d] transition-colors animate-float delay-400"
             aria-label="Call us"
           >
@@ -519,6 +541,61 @@ export const ProductDetails = () => {
                 <p>{product.description}</p>
               </div>
             )}
+
+            {/* Measurement Section */}
+            <div className="space-y-4">
+              <h3 className="font-medium text-gray-900">Dimensions (Optionnel)</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label htmlFor="hauteur" className="block text-sm font-medium text-gray-700 mb-1">
+                    Hauteur (cm)
+                  </label>
+                  <input
+                    type="number"
+                    id="hauteur"
+                    value={measurements.hauteur}
+                    onChange={(e) => handleMeasurementChange('hauteur', e.target.value)}
+                    placeholder="Hauteur"
+                    className="w-full border border-gray-300 rounded-md p-2 text-gray-900 bg-white"
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="largeur" className="block text-sm font-medium text-gray-700 mb-1">
+                    Largeur (cm)
+                  </label>
+                  <input
+                    type="number"
+                    id="largeur"
+                    value={measurements.largeur}
+                    onChange={(e) => handleMeasurementChange('largeur', e.target.value)}
+                    placeholder="Largeur"
+                    className="w-full border border-gray-300 rounded-md p-2 text-gray-900 bg-white"
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="carr" className="block text-sm font-medium text-gray-700 mb-1">
+                    Carré (cm)
+                  </label>
+                  <input
+                    type="number"
+                    id="carr"
+                    value={measurements.carr}
+                    onChange={(e) => handleMeasurementChange('carr', e.target.value)}
+                    placeholder="Carré"
+                    className="w-full border border-gray-300 rounded-md p-2 text-gray-900 bg-white"
+                    min="0"
+                    step="0.1"
+                  />
+                </div>
+              </div>
+              <p className="text-sm text-gray-500">
+                Ces dimensions sont optionnelles. Remplissez-les uniquement si nécessaire pour votre commande.
+              </p>
+            </div>
 
             <div className="flex items-center gap-4">
               <div className="flex items-center border rounded-lg overflow-hidden">
