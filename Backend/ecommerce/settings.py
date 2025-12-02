@@ -10,8 +10,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", cast=bool)
 ALLOWED_HOSTS = [
-    'www.hvmc.store',
-    'hvmc.store',
+    'www.alitapis.com',
+    'alitapis.com',
     '142.93.180.74',
     'backend',  # Docker service name
     'localhost',
@@ -116,8 +116,8 @@ DATABASES = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "https://www.hvmc.store",
-    "https://hvmc.store",
+    "https://www.alitapis.com",
+    "https://alitapis.com",
     "http://localhost:5173",
     "http://localhost:5174"
 ]
