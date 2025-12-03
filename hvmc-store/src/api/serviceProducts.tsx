@@ -1,7 +1,7 @@
 // src/services/serviceProducts.tsx
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || '/fr/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://alitapis.com/fr/api';
 console.log("API_URL utilisée :", API_URL)
 // src/services/serviceProducts.tsx
 export interface ProductImage {
