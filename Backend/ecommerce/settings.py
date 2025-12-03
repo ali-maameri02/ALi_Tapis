@@ -141,8 +141,8 @@ USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://hvmc.store",
-    "https://www.hvmc.store",
+   "https://www.alitapis.com",
+    "https://alitapis.com",
     "http://localhost:5173",
     'http://localhost:5174'
 ]
@@ -182,8 +182,8 @@ CORS_ALLOW_ALL_ORIGINS = False  # Change this to False
 CORS_ALLOW_CREDENTIALS = True  # Add this line
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://hvmc.store",
-    "https://www.hvmc.store",
+   "https://www.alitapis.com",
+    "https://alitapis.com",
     "http://localhost:5173",
     'http://localhost:5174'
 ]
