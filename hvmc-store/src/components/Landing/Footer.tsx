@@ -93,13 +93,13 @@ export const Footer = () => {
                   className="hover:text-[#d6b66d] transition-colors ltr-number"
                   dir="ltr"
                 >
-              +213 557 09 86 63
+              +213 542 98 11 80
                 </a>
               </li>
               <li className={`flex items-start gap-2 text-zinc-300 text-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
                 <Mail className="h-4 w-4 text-[#d6b66d] mt-0.5 flex-shrink-0" />
-                <a href="mailto:midimahdi09@gmail.com" className="hover:text-[#d6b66d] transition-colors">
-                midimahdi09@gmail.com
+                <a href="mailto:Younasjac@gmail.com" className="hover:text-[#d6b66d] transition-colors">
+                Younasjac@gmail.com
                 </a>
               </li>
               <li className={`flex items-start gap-2 text-zinc-300 text-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
@@ -109,7 +109,7 @@ export const Footer = () => {
 
             </ul>
           </div>
-          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3195.5369982517436!2d3.2392560748944415!3d36.781673268745244!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x128e4f385de0bb13%3A0xfafd51a28ab1f4ab!2sH-VMC!5e0!3m2!1sfr!2sdz!4v1755373699627!5m2!1sfr!2sdz" width="200" height="200" style={{border:0}} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+          <iframe src="https://maps.app.goo.gl/AwKR2fbackdD88GK9?g_st=ac" width="200" height="200" style={{border:0}} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
 
         </div>
 
