@@ -10,17 +10,17 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     assetsDir: 'assets',  // Explicitly set assets directory
-    rollupOptions: {
-      output: {
-        assetFileNames: (assetInfo) => {
-          if (assetInfo.name?.endsWith('.png') || 
-              assetInfo.name?.endsWith('.jpg') ||
-              assetInfo.name?.endsWith('.svg')) {
-            return 'assets/[name].[ext]'
-          }
-          return 'assets/[name]-[hash].[ext]'
-        }}
-    }
+    // rollupOptions: {
+    //   output: {
+    //     assetFileNames: (assetInfo) => {
+    //       if (assetInfo.name?.endsWith('.png') || 
+    //           assetInfo.name?.endsWith('.jpg') ||
+    //           assetInfo.name?.endsWith('.svg')) {
+    //         return 'assets/[name].[ext]'
+    //       }
+    //       return 'assets/[name]-[hash].[ext]'
+    //     }}
+    // }
   },
   resolve: {
     alias: {
