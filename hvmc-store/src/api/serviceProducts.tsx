@@ -17,7 +17,7 @@ export interface Product {
   id: number;
   name: string;
   description: string;
-  price: number;
+  price: number | string;
   metre_price: string;  // This is coming as a string from backend
   poids?: string;
   is_available: boolean;

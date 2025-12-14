@@ -154,8 +154,15 @@ export const ProductsCategorie = () => {
                     product={{
                       id: product.id.toString(),
                       name: product.name,
-                      price: product.price,
+                      // Convert price to string - FIX FOR THE ERROR
+                      price: typeof product.price === 'number' 
+                        ? product.price.toString() + ' DA' 
+                        : String(product.price) + ' DA',
                       image: product.image,
+                      description: product.description,
+                      is_available: product.is_available,
+                      created_at: product.created_at,
+                      category: product.category?.name || ''
                     }}
                   />
                 </div>
