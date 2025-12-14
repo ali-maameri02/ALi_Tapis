@@ -1,26 +1,26 @@
 import { toast } from "sonner";
 import { apiClient } from "./auth";
 
+// In serviceOrders.ts
 export interface OrderItem {
   id: string;
   productname: string;
-  price: number; // Calculated total price for the item(s)
+  price: string | number; // Allow both string and number
   quantity: number;
   image?: string;
   color?: string;
   longueur?: number;
-  metre_price?: string; // Price per meter from product
-  metre_price_value?: string; // Same as metre_price, for clarity
-  unit_price?: number; // Original unit price (for regular products)
+  metre_price?: string;
+  metre_price_value?: string;
+  unit_price?: number;
   date?: string;
   wilaya?: string;
   address?: string;
-  delivery_price?: number; // Delivery price
-  total_price?: number; // Total price = (metre_price × longueur × quantity) + delivery_price
-  calculation?: string; // String showing the calculation
-  calculated_item_price?: number; // Explicit calculated item price
+  delivery_price?: number;
+  total_price?: number;
+  calculation?: string;
+  calculated_item_price?: number;
 }
-
 interface WilayaDelivery {
   id: number;
   name: string;
@@ -58,7 +58,7 @@ export const submitOrder = async (items: OrderItem | OrderItem[]) => {
         itemPrice = metrePrice * longueur * item.quantity;
       }
       
-      return sum + itemPrice;
+      return sum + Number(itemPrice);
     }, 0);
     
     const deliveryPrice = orders[0]?.delivery_price || 0;

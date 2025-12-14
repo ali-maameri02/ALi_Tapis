@@ -237,112 +237,113 @@ export const Cart = () => {
     setShowOrderForm(true);
   };
 
-  const handleOrderSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (cartItems.length === 0) {
-      toast.error(t('cart.empty'), {
-        description: t('cart.emptyDescription'),
-        style: {
-          background: '#FF3333',
-          color: 'white',
-          borderRadius: '12px'
-        }
-      });
-      return;
-    }
-    
-    // Validation
-    if (!userData.name.trim() || !userData.phone.trim()) {
-      toast.error(t('errors.missingFields'), {
-        description: t('errors.missingFieldsDescription'),
-        style: {
-          background: '#FF3333',
-          color: 'white',
-          borderRadius: '12px'
-        }
-      });
-      return;
-    }
-    
-    if (!selectedWilaya) {
-      toast.error(t('errors.deliveryRequired'), {
-        description: t('errors.deliveryRequired'),
-        style: {
-          background: '#FF3333',
-          color: 'white',
-          borderRadius: '12px'
-        }
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      // Create order items
-      const orderItems: OrderItem[] = cartItems.map((item: CartItem) => {
-        // Calculate price for each item
-        const itemPrice = calculateItemPrice(item);
-        
-        let calculationMethod = '';
-        if (item.metre_price && item.longueur) {
-          const metrePrice = parsePriceToNumber(item.metre_price);
-          const longueurValue = parsePriceToNumber(item.longueur);
-          calculationMethod = `${formatPrice(metrePrice)} DA/m × ${longueurValue}m × ${item.quantity}`;
-        } else {
-          const unitPrice = parsePriceToNumber(item.price);
-          calculationMethod = `${formatPrice(unitPrice)} DA × ${item.quantity}`;
-        }
-        
-        return {
-          productname: item.name,
-          id: item.id,
-          price: itemPrice,
-          quantity: item.quantity,
-          image: item.image,
-          color: item.color || '',
-          longueur: item.longueur ? parsePriceToNumber(item.longueur) : undefined,
-          metre_price: item.metre_price || undefined,
-          unit_price: parsePriceToNumber(item.price),
-          metre_price_value: item.metre_price,
-          wilaya: selectedWilaya,
-          address: userData.address,
-          delivery_price: deliveryPrice,
-          total_price: totalPrice,
-          calculation: calculationMethod
-        };
-      });
-
-      // Save user data
-      const userDataToSave = {
-        ...userData,
-        wilaya: selectedWilaya
+  // In Cart.tsx, update the handleOrderSubmit function:
+const handleOrderSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (cartItems.length === 0) {
+    toast.error(t('cart.empty'), {
+      description: t('cart.emptyDescription'),
+      style: {
+        background: '#FF3333',
+        color: 'white',
+        borderRadius: '12px'
+      }
+    });
+    return;
+  }
+  
+  // Validation
+  if (!userData.name.trim() || !userData.phone.trim()) {
+    toast.error(t('errors.missingFields'), {
+      description: t('errors.missingFieldsDescription'),
+      style: {
+        background: '#FF3333',
+        color: 'white',
+        borderRadius: '12px'
+      }
+    });
+    return;
+  }
+  
+  if (!selectedWilaya) {
+    toast.error(t('errors.deliveryRequired'), {
+      description: t('errors.deliveryRequired'),
+      style: {
+        background: '#FF3333',
+        color: 'white',
+        borderRadius: '12px'
+      }
+    });
+    return;
+  }
+  
+  setIsSubmitting(true);
+  
+  try {
+    // Create order items
+    const orderItems: OrderItem[] = cartItems.map((item: CartItem) => {
+      // Calculate price for each item
+      const itemPrice = calculateItemPrice(item);
+      
+      let calculationMethod = '';
+      if (item.metre_price && item.longueur) {
+        const metrePrice = parsePriceToNumber(item.metre_price);
+        const longueurValue = parsePriceToNumber(item.longueur);
+        calculationMethod = `${formatPrice(metrePrice)} DA/m × ${longueurValue}m × ${item.quantity}`;
+      } else {
+        const unitPrice = parsePriceToNumber(item.price);
+        calculationMethod = `${formatPrice(unitPrice)} DA × ${item.quantity}`;
+      }
+      
+      return {
+        productname: item.name,
+        id: item.id,
+        price: itemPrice, // This is now a number, which is allowed in the updated interface
+        quantity: item.quantity,
+        image: item.image,
+        color: item.color || '',
+        longueur: item.longueur ? parsePriceToNumber(item.longueur) : undefined,
+        metre_price: item.metre_price || undefined,
+        unit_price: parsePriceToNumber(item.price),
+        metre_price_value: item.metre_price,
+        wilaya: selectedWilaya,
+        address: userData.address,
+        delivery_price: deliveryPrice,
+        total_price: totalPrice,
+        calculation: calculationMethod
       };
-      localStorage.setItem("userData", JSON.stringify(userDataToSave));
-      
-      await submitOrder(orderItems);
-      
-      // Show success
-      showSuccessNotification();
-      clearCart();
-      setShowOrderForm(false);
-      setFormStep('details');
-      navigate('/orders');
-      
-    } catch (error) {
-      toast.error(t('errors.orderFailed'), {
-        description: t('errors.orderFailedDescription'),
-        style: {
-          background: '#FF3333',
-          color: 'white',
-          borderRadius: '12px'
-        }
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    });
+
+    // Save user data
+    const userDataToSave = {
+      ...userData,
+      wilaya: selectedWilaya
+    };
+    localStorage.setItem("userData", JSON.stringify(userDataToSave));
+    
+    await submitOrder(orderItems);
+    
+    // Show success
+    showSuccessNotification();
+    clearCart();
+    setShowOrderForm(false);
+    setFormStep('details');
+    navigate('/orders');
+    
+  } catch (error) {
+    toast.error(t('errors.orderFailed'), {
+      description: t('errors.orderFailedDescription'),
+      style: {
+        background: '#FF3333',
+        color: 'white',
+        borderRadius: '12px'
+      }
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-black pt-24">

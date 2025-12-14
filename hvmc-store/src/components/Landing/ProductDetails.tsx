@@ -285,126 +285,124 @@ export const ProductDetails = () => {
     });
   };
 
-  // Order submission handler
-  const handleOrderSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!product) return;
-    
-    // Validation
-    if (!userData.name.trim() || !userData.phone.trim()) {
-      toast.error(t('errors.missingFields'), {
-        description: t('errors.missingFieldsDescription'),
-        style: {
-          background: '#FF3333',
-          color: 'white',
-          borderRadius: '12px'
-        }
-      });
-      return;
-    }
-    
-    const metrePrice = parseFloat(product.metre_price || "0");
-    const standardPrice = parseFloat(product.price?.toString() || "0");
-    
-    // STRICTER VALIDATION for metre-priced products
-    if (metrePrice > 0 && (!longueur || parseFloat(longueur) <= 0)) {
-      toast.error(t('product.lengthRequired'), {
-        description: t('product.meterRequired'),
-        style: {
-          background: '#FF3333',
-          color: 'white',
-          borderRadius: '12px'
-        }
-      });
-      return;
-    }
-    
-    if (!selectedWilaya) {
-      toast.error(t('errors.deliveryRequired'), {
-        description: t('errors.deliveryRequiredDescription'),
-        style: {
-          background: '#FF3333',
-          color: 'white',
-          borderRadius: '12px'
-        }
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    const selectedColorName = uniqueColors.find((color: {color: string, color_name: string}) => color.color === selectedColor)?.color_name || '';
-    
-    // Calculate item price - PRIORITIZE metre_price
-    let itemPrice: number;
-    let calculationMethod = '';
-    
-    if (metrePrice > 0 && longueur && parseFloat(longueur) > 0) {
-      // Use metre_price × longueur × quantity
-      itemPrice = metrePrice * parseFloat(longueur) * quantity;
-      calculationMethod = `${metrePrice} DA/m × ${longueur}m × ${quantity}`;
-    } else if (metrePrice > 0) {
-      // Should not happen due to validation above, but as fallback
-      itemPrice = 0;
-      calculationMethod = 'Prix au mètre (longueur manquante)';
-    } else {
-      // Use standard price × quantity
-      itemPrice = standardPrice * quantity;
-      calculationMethod = `${standardPrice} DA × ${quantity}`;
-    }
-    
-    // Calculate total with delivery
-    const finalPrice = itemPrice + deliveryPrice;
-    
-    // Create order item
-    const orderItem: OrderItem = {
-      productname: product.name,
-      id: product.id.toString(),
-      price: itemPrice,
-      quantity: quantity,
-      image: currentImage,
-      color: selectedColorName,
-      longueur: longueur ? parseFloat(longueur) : undefined,
-      metre_price: product.metre_price || undefined,
-      unit_price: standardPrice,
-      metre_price_value: product.metre_price,
-      wilaya: selectedWilaya,
-      address: userData.address,
-      delivery_price: deliveryPrice,
-      total_price: finalPrice,
-      calculation: calculationMethod
-    };
-    
-    try {
-      // Save user data
-      const userDataToSave = {
-        ...userData,
-        wilaya: selectedWilaya
-      };
-      localStorage.setItem("userData", JSON.stringify(userDataToSave));
-      
-      await submitOrder([orderItem]);
-      
-      // Show success
-      showSuccessNotification();
-      setShowOrderForm(false);
-      setFormStep('details');
-      
-    } catch (error) {
-      toast.error(t('errors.orderFailed'), {
-        description: t('errors.orderFailedDescription'),
-        style: {
-          background: '#FF3333',
-          color: 'white',
-          borderRadius: '12px'
-        }
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+const handleOrderSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (!product) return;
+  
+  // Validation
+  if (!userData.name.trim() || !userData.phone.trim()) {
+    toast.error(t('errors.missingFields'), {
+      description: t('errors.missingFieldsDescription'),
+      style: {
+        background: '#FF3333',
+        color: 'white',
+        borderRadius: '12px'
+      }
+    });
+    return;
+  }
+  
+  const metrePrice = parseFloat(product.metre_price || "0");
+  const standardPrice = parseFloat(product.price?.toString() || "0");
+  
+  // STRICTER VALIDATION for metre-priced products
+  if (metrePrice > 0 && (!longueur || parseFloat(longueur) <= 0)) {
+    toast.error(t('product.lengthRequired'), {
+      description: t('product.meterRequired'),
+      style: {
+        background: '#FF3333',
+        color: 'white',
+        borderRadius: '12px'
+      }
+    });
+    return;
+  }
+  
+  if (!selectedWilaya) {
+    toast.error(t('errors.deliveryRequired'), {
+      description: t('errors.deliveryRequiredDescription'),
+      style: {
+        background: '#FF3333',
+        color: 'white',
+        borderRadius: '12px'
+      }
+    });
+    return;
+  }
+  
+  setIsSubmitting(true);
+  
+  const selectedColorName = uniqueColors.find((color: {color: string, color_name: string}) => color.color === selectedColor)?.color_name || '';
+  
+  // Calculate item price - PRIORITIZE metre_price
+  let itemPrice: number;
+  let calculationMethod = '';
+  
+  if (metrePrice > 0 && longueur && parseFloat(longueur) > 0) {
+    // Use metre_price × longueur × quantity
+    itemPrice = metrePrice * parseFloat(longueur) * quantity;
+    calculationMethod = `${metrePrice} DA/m × ${longueur}m × ${quantity}`;
+  } else if (metrePrice > 0) {
+    // Should not happen due to validation above, but as fallback
+    itemPrice = 0;
+    calculationMethod = 'Prix au mètre (longueur manquante)';
+  } else {
+    // Use standard price × quantity
+    itemPrice = standardPrice * quantity;
+    calculationMethod = `${standardPrice} DA × ${quantity}`;
+  }
+  
+  // Calculate total with delivery
+  const finalPrice = itemPrice + deliveryPrice;
+  
+  // Create order item - convert price to string if needed
+  const orderItem: OrderItem = {
+    productname: product.name,
+    id: product.id.toString(),
+    price: itemPrice, // This is a number, allowed in updated interface
+    quantity: quantity,
+    image: currentImage,
+    color: selectedColorName,
+    longueur: longueur ? parseFloat(longueur) : undefined,
+    metre_price: product.metre_price || undefined,
+    unit_price: standardPrice,
+    metre_price_value: product.metre_price,
+    wilaya: selectedWilaya,
+    address: userData.address,
+    delivery_price: deliveryPrice,
+    total_price: finalPrice,
+    calculation: calculationMethod
   };
-
+  
+  try {
+    // Save user data
+    const userDataToSave = {
+      ...userData,
+      wilaya: selectedWilaya
+    };
+    localStorage.setItem("userData", JSON.stringify(userDataToSave));
+    
+    await submitOrder([orderItem]);
+    
+    // Show success
+    showSuccessNotification();
+    setShowOrderForm(false);
+    setFormStep('details');
+    
+  } catch (error) {
+    toast.error(t('errors.orderFailed'), {
+      description: t('errors.orderFailedDescription'),
+      style: {
+        background: '#FF3333',
+        color: 'white',
+        borderRadius: '12px'
+      }
+    });
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   // Image handlers
   const handleNextImage = () => {
     if (filteredImages.length === 0) return;
