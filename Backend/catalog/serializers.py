@@ -22,6 +22,7 @@ class ProductImageSerializer(serializers.ModelSerializer):
             'image': {'label': _("Image")},
         }
 
+# serializers.py
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True, label=_("Category"))
     category_id = serializers.PrimaryKeyRelatedField(
@@ -35,7 +36,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'description', 'price',
+            'id', 'name', 'description', 'price', 'metre_price', 'poids',
             'is_available', 'created_at', 'image',
             'category', 'category_id', 'images'
         ]
@@ -44,6 +45,8 @@ class ProductSerializer(serializers.ModelSerializer):
             'name': {'label': _("Product Name")},
             'description': {'label': _("Description")},
             'price': {'label': _("Price")},
+            'metre_price': {'label': _("Price per meter")},
+            'poids': {'label': _("Weight")},
             'is_available': {'label': _("Available")},
             'created_at': {'label': _("Created At")},
             'image': {'label': _("Image")},

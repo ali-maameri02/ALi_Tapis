@@ -8,15 +8,18 @@ export interface ProductImage {
   id: number;
   image: string;
   order: number;
-  color: string;  // Make sure this exists
-  color_name: string;  // Make sure this exists
+  color: string;
+  color_name: string;
 }
 
+/// serviceProducts.ts
 export interface Product {
   id: number;
   name: string;
   description: string;
-  price: string;
+  price: number;
+  metre_price: string;  // This is coming as a string from backend
+  poids?: string;
   is_available: boolean;
   created_at: string;
   image: string;
@@ -28,6 +31,7 @@ export interface Product {
     image: string;
   };
 }
+
 
 export const fetchProducts = async (): Promise<Product[]> => {
   try {

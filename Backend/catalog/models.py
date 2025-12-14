@@ -96,6 +96,17 @@ class Product(models.Model):
         blank=True,
         verbose_name=_("Main Image")  # Optional: keep as fallback
     )
+    
+    metre_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    poids = models.DecimalField(
+        _("Poids (kg)"),
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text=_("Poids en kilogrammes")
+    ) 
 
     class Meta:
         verbose_name = _("Produit")

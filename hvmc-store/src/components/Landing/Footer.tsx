@@ -109,8 +109,16 @@ export const Footer = () => {
 
             </ul>
           </div>
-          <iframe src="https://maps.app.goo.gl/AwKR2fbackdD88GK9?g_st=ac" width="200" height="200" style={{border:0}} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
-
+          <iframe 
+        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3365.4944687318284!2d3.6799016746800612!3d32.486210798792605!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x126427004b8b3a47%3A0x3c991186c13c787b!2z2YXYrdmE2KfYqiDYudmE2Yog2YTZhNmF2YHYsdmI2LTYp9iqINmIINin2YTYs9iq2KfYptix!5e0!3m2!1sfr!2sdz!4v1765679694683!5m2!1sfr!2sdz"
+        width="200"
+        height="200"
+        style={{ border: 0 }}
+        allowFullScreen
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        title="Google Maps Location"
+      />
         </div>
 
         {/* Copyright */}

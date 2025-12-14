@@ -6,31 +6,25 @@ from django.conf import settings
 from django.http import HttpResponseBadRequest
 from rest_framework import generics, permissions
 from rest_framework.views import APIView
+from rest_framework import viewsets, generics
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 # from google_auth_oauthlib.flow import Flow
 # from googleapiclient.discovery import build
 
-from .models import Order
-from .serializers import OrderSerializer
-
+from .models import Order, WilayaDelivery
+from .serializers import OrderSerializer, WilayaDeliverySerializer
 class OrderCreateView(generics.CreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
+    permission_classes = [AllowAny]  # POST is allowed for everyone
     
-    def get_permissions(self):
-        # Allow both authenticated and unauthenticated users
-        if self.request.method == 'POST':
-            return []  # No permissions required for creating orders
-        return [permissions.IsAuthenticated()]
-
     def perform_create(self, serializer):
         # If user is authenticated, associate with user
-        # Guest users will have their data stored in guest fields
         if self.request.user.is_authenticated:
             serializer.save(client=self.request.user)
         else:
             serializer.save()
-
 class OrderHistoryView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -47,7 +41,41 @@ class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get_queryset(self):
         return Order.objects.filter(client=self.request.user)
 
+class WilayaDeliveryViewSet(viewsets.ModelViewSet):
+    queryset = WilayaDelivery.objects.all()
+    serializer_class = WilayaDeliverySerializer
+    permission_classes = [AllowAny]
 
+class WilayaDeliveryListView(generics.ListAPIView):
+    queryset = WilayaDelivery.objects.all()
+    serializer_class = WilayaDeliverySerializer
+    permission_classes = [AllowAny]
+
+class GetDeliveryPriceView(generics.RetrieveAPIView):
+    permission_classes = [AllowAny]
+    
+    def get(self, request, *args, **kwargs):
+        wilaya_name = request.GET.get('wilaya', '').strip()
+        
+        if not wilaya_name:
+            return Response({'delivery_price': 0, 'message': 'Wilaya not specified'})
+        
+        try:
+            delivery = WilayaDelivery.objects.get(name=wilaya_name)
+            return Response({
+                'delivery_price': float(delivery.delivery_price),
+                'wilaya': delivery.name
+            })
+        except WilayaDelivery.DoesNotExist:
+            return Response({
+                'delivery_price': 0,
+                'message': f'No delivery price found for {wilaya_name}'
+            })
+        except Exception as e:
+            return Response({
+                'delivery_price': 0,
+                'message': str(e)
+            })
 # def oauth2_init(request):
 #     flow = Flow.from_client_secrets_file(
 #         settings.GOOGLE_CLIENT_SECRET_FILE,

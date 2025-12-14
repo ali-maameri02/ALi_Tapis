@@ -4,6 +4,21 @@ from django.utils.translation import gettext_lazy as _
 from catalog.models import Product
 
 
+
+
+
+class WilayaDelivery(models.Model):
+    name = models.CharField(_("Wilaya"), max_length=100, unique=True)
+    delivery_price = models.DecimalField(_("Prix de livraison"), max_digits=10, decimal_places=2)
+
+    class Meta:
+        verbose_name = _("Prix de livraison par wilaya")
+        verbose_name_plural = _("Prix de livraison par wilaya")
+
+    def __str__(self):
+        return f"{self.name} - {self.delivery_price} DA"
+
+
 class Order(models.Model):
     # For authenticated users
     client = models.ForeignKey(
@@ -23,7 +38,8 @@ class Order(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Date de création"))
     is_sent = models.BooleanField(default=False, verbose_name=_("Envoyée"))
-
+    delivery_price = models.DecimalField(_("Prix livraison"), max_digits=10, decimal_places=2, default=0)
+    total_price = models.DecimalField(_("Prix total commande"), max_digits=12, decimal_places=2, default=0)
     class Meta:
         verbose_name = _("Commande")
         verbose_name_plural = _("Commandes")
@@ -35,39 +51,32 @@ class Order(models.Model):
             return _("Commande n°%(id)s par %(nom)s (Invité)") % {"id": self.id, "nom": self.guest_name}
 
 
+# orders/models.py - Update the OrderItem model
 class OrderItem(models.Model):
-    order = models.ForeignKey(
-        Order,
-        related_name='items',
-        on_delete=models.CASCADE,
-        verbose_name=_("Commande")
-    )
-    product = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE,
-        verbose_name=_("Produit")
-    )
-    quantity = models.PositiveIntegerField(default=1, verbose_name=_("Quantité"))
-
-    # Additional fields for order tracking
+    order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    
+    quantity = models.PositiveIntegerField(default=1)
     product_name = models.CharField(_("Nom du produit"), max_length=255, blank=True)
-    price = models.DecimalField(_("Prix"), max_digits=10, decimal_places=2, default=0)
-    color = models.CharField(_("Couleur"), max_length=100, blank=True)
-
-    # Measurement fields
-    hauteur = models.DecimalField(_("Hauteur"), max_digits=8, decimal_places=2, null=True, blank=True)
-    largeur = models.DecimalField(_("Largeur"), max_digits=8, decimal_places=2, null=True, blank=True)
-    carr = models.DecimalField(_("Carré"), max_digits=8, decimal_places=2, null=True, blank=True)
-
-    class Meta:
-        verbose_name = _("Article de commande")
-        verbose_name_plural = _("Articles de commande")
-
-    def __str__(self):
-        return _("%(quantité)s × %(produit)s") % {"quantité": self.quantity, "produit": self.product.name}
+    
+    # NEW FIELDS
+    # metre_price = models.DecimalField(_("Prix par mètre"), max_digits=10, decimal_places=2, default=0)
+    longueur = models.DecimalField(_("Longueur (m)"), max_digits=8, decimal_places=2, null=True, blank=True)
+    color = models.CharField(_("Couleur"), max_length=100, blank=True, null=True)  # ADD THIS LINE
+    
+    price = models.DecimalField(_("Prix total"), max_digits=10, decimal_places=2, default=0)
 
     def save(self, *args, **kwargs):
-        # Auto-populate product name if not set
-        if not self.product_name and self.product:
+        # Auto name
+        if not self.product_name:
             self.product_name = self.product.name
+
+        # Auto metre_price from product
+        if self.product and hasattr(self.product, "metre_price"):
+            self.metre_price = self.product.metre_price
+
+        # Compute final price = metre_price × longueur × quantity
+        if self.longueur:
+            self.price = self.metre_price * self.longueur * self.quantity
+
         super().save(*args, **kwargs)

@@ -1,19 +1,20 @@
+// Cartcontext.tsx
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
-// CartContext - Update CartItem type
-type CartItem = {
+export type CartItem = {
   id: string;
   name: string;
-  price: string;
+  price: string; // Store as string with currency for display
   image: string;
   quantity: number;
   color?: string;
   selectedImage?: string;
-  hauteur?: number | string;  // Add measurement fields
-  largeur?: number | string;
-  carr?: number | string;
+  longueur?: string;
+  poids?: string;
+  metre_price?: string;
 };
-type CartContextType = {
+
+export type CartContextType = {
   cartItems: CartItem[];
   addToCart: (product: CartItem) => void;
   removeFromCart: (productId: string) => void;
@@ -43,22 +44,30 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const addToCart = (product: CartItem) => {
     setCartItems(prevItems => {
+      // Check if this exact product (same id, color, and length) already exists
       const existingItem = prevItems.find(item => 
-        item.id === product.id && item.color === product.color
+        item.id === product.id && 
+        item.color === product.color &&
+        item.longueur === product.longueur
       );
-      let newItems;
       
       if (existingItem) {
-        newItems = prevItems.map(item =>
-          item.id === product.id && item.color === product.color
-            ? { ...item, quantity: item.quantity + product.quantity }
+        // Update quantity for existing item
+        return prevItems.map(item =>
+          item.id === product.id && 
+          item.color === product.color &&
+          item.longueur === product.longueur
+            ? { 
+                ...item, 
+                quantity: item.quantity + product.quantity,
+                price: product.price // Update price in case it changed
+              }
             : item
         );
       } else {
-        newItems = [...prevItems, product];
+        // Add new item
+        return [...prevItems, product];
       }
-      
-      return newItems;
     });
   };
 
