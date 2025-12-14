@@ -17,7 +17,7 @@ export const Footer = () => {
           {/* Brand Info */}
           <div className="sm:col-span-2 lg:col-span-1 space-y-4">
          
-         <img src={logo} width={150} alt="" />
+         <img src="/assets/photo_de_profile-removebg-preview.png"  width={150} alt="" />
             <Link to="/" className="flex items-center gap-2">
       
               <span className="text-xl font-light text-[#d6b66d]">
