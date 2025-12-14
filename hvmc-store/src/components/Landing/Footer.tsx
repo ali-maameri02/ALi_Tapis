@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Instagram, Facebook, Phone, Mail, MapPin } from 'lucide-react';
 import '@/lib/rtl.css'
 import { FaTiktok } from 'react-icons/fa';
-import logo from '@/assets/photo_de_profile-removebg-preview.png';
+// import logo from '@/assets/photo_de_profile-removebg-preview.png';
 
 export const Footer = () => {
   const { t, i18n } = useTranslation();
