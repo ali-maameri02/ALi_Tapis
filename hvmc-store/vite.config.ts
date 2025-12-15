@@ -9,17 +9,22 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
-    assetsDir: 'assets',  // Explicitly set assets directory
+    assetsDir: 'assets',
+    // Add sourcemap for debugging
+    sourcemap: false,
+    // Optimize chunk size
     rollupOptions: {
       output: {
         assetFileNames: (assetInfo) => {
-          if (assetInfo.name?.endsWith('.png') || 
-              assetInfo.name?.endsWith('.jpg') ||
-              assetInfo.name?.endsWith('.svg')) {
-            return 'assets/[name].[ext]'
+          const extType = assetInfo.name?.split('.').at(1);
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType || '')) {
+            return 'assets/images/[name]-[hash][extname]';
           }
-          return 'assets/[name].[ext]'
-        }}
+          return 'assets/[name]-[hash][extname]';
+        },
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
+      }
     }
   },
   resolve: {
@@ -27,4 +32,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Add public directory configuration
+  publicDir: 'public',
 })
