@@ -58,6 +58,37 @@ export const ProductDetails = () => {
   const imgRef = useRef<HTMLImageElement>(null);
   const { t } = useTranslation();
 
+  // Get prices from product
+  const metrePrice = product ? parseFloat(product.metre_price || "0") : 0;
+  const standardPrice = product ? parseFloat(product.price?.toString() || "0") : 0;
+  
+  // Check if metre_price exists AND is greater than 0
+  const hasMetrePrice = metrePrice > 0;
+
+  // Calculate product price - USE metre_price when available, otherwise use standard price
+  const calculateProductPrice = () => {
+    if (!product) return 0;
+    
+    if (hasMetrePrice) {
+      if (longueur && parseFloat(longueur) > 0) {
+        // Use metre_price × longueur × quantity
+        return metrePrice * parseFloat(longueur) * quantity;
+      } else {
+        // Product has metre_price but no length yet
+        return 0;
+      }
+    } else {
+      // Regular product - use standard price × quantity
+      return standardPrice * quantity;
+    }
+  };
+
+  // TOTAL: (metre_price × longueur × quantity) + delivery_price OR (standard price × quantity) + delivery_price
+  const calculateTotalPrice = () => {
+    const productPrice = calculateProductPrice();
+    return productPrice + deliveryPrice;
+  };
+
   // Load product and wilayas on component mount
   useEffect(() => {
     const loadData = async () => {
@@ -98,32 +129,10 @@ export const ProductDetails = () => {
     loadData();
   }, [id, t]);
 
+  // Update total price whenever longueur, quantity, or deliveryPrice changes
   useEffect(() => {
-    if (product) {
-      const metrePrice = parseFloat(product.metre_price || "0");
-      const standardPrice = parseFloat(product.price?.toString() || "0");
-      
-      let itemPrice = 0;
-      
-      // PRIORITIZE metre_price over standard price
-      if (metrePrice > 0) {
-        if (longueur && parseFloat(longueur) > 0) {
-          // Use metre_price × longueur × quantity
-          itemPrice = metrePrice * parseFloat(longueur) * quantity;
-        } else {
-          // Product has metre_price but no length entered yet
-          itemPrice = 0;
-        }
-      } else {
-        // Only use standard price if metre_price is not available
-        itemPrice = standardPrice * quantity;
-      }
-      
-      // Total = item price + delivery price
-      const finalTotal = itemPrice + deliveryPrice;
-      setTotalPrice(finalTotal);
-    }
-  }, [product, quantity, longueur, deliveryPrice]);
+    setTotalPrice(calculateTotalPrice());
+  }, [longueur, quantity, deliveryPrice]);
 
   // Fetch delivery price when wilaya changes
   useEffect(() => {
@@ -219,11 +228,8 @@ export const ProductDetails = () => {
   const handleAddToCart = () => {
     if (!product) return;
     
-    const metrePrice = parseFloat(product.metre_price || "0");
-    const standardPrice = parseFloat(product.price?.toString() || "0");
-    
-    // STRICTER VALIDATION: If product has metre_price, longueur is REQUIRED
-    if (metrePrice > 0 && (!longueur || parseFloat(longueur) <= 0)) {
+    // Require length for metre-priced products
+    if (hasMetrePrice && (!longueur || parseFloat(longueur) <= 0)) {
       toast.error(t('product.lengthRequired'), {
         description: t('product.meterRequired'),
         style: {
@@ -237,31 +243,17 @@ export const ProductDetails = () => {
     
     const selectedColorName = uniqueColors.find((color: {color: string, color_name: string}) => color.color === selectedColor)?.color_name || '';
     
-    // Calculate price - PRIORITIZE metre_price over standard price
-    let displayPrice = 0;
-    if (metrePrice > 0 && longueur && parseFloat(longueur) > 0) {
-      // Use metre_price × longueur × quantity
-      displayPrice = metrePrice * parseFloat(longueur) * quantity;
-    } else if (metrePrice > 0) {
-      // Has metre_price but no length - cannot add to cart
-      toast.error(t('product.lengthRequired'), {
-        description: t('product.meterRequired'),
-        style: {
-          background: '#FF3333',
-          color: 'white',
-          borderRadius: '12px'
-        }
-      });
-      return;
-    } else {
-      // Use standard price × quantity
-      displayPrice = standardPrice * quantity;
-    }
+    // Calculate the display price
+    // const displayPrice = calculateProductPrice();
     
+    // Add to cart with correct price structure:
+    // 1. If metre_price exists, use it as the main price
+    // 2. If no metre_price, use standard price
     addToCart({
       id: product.id.toString(),
       name: product.name,
-      price: `${displayPrice.toFixed(2)} DA`,
+      // Pass the correct price - if metre_price exists, use it as the unit price
+      price: hasMetrePrice ? `${metrePrice.toFixed(2)}` : `${standardPrice.toFixed(2)}`,
       image: currentImage || product.image,
       quantity: quantity,
       color: selectedColorName,
@@ -285,124 +277,124 @@ export const ProductDetails = () => {
     });
   };
 
-const handleOrderSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  if (!product) return;
-  
-  // Validation
-  if (!userData.name.trim() || !userData.phone.trim()) {
-    toast.error(t('errors.missingFields'), {
-      description: t('errors.missingFieldsDescription'),
-      style: {
-        background: '#FF3333',
-        color: 'white',
-        borderRadius: '12px'
+  const handleOrderSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!product) return;
+    
+    // Validation
+    if (!userData.name.trim() || !userData.phone.trim()) {
+      toast.error(t('errors.missingFields'), {
+        description: t('errors.missingFieldsDescription'),
+        style: {
+          background: '#FF3333',
+          color: 'white',
+          borderRadius: '12px'
+        }
+      });
+      return;
+    }
+    
+    // Require length for metre-priced products
+    if (hasMetrePrice && (!longueur || parseFloat(longueur) <= 0)) {
+      toast.error(t('product.lengthRequired'), {
+        description: t('product.meterRequired'),
+        style: {
+          background: '#FF3333',
+          color: 'white',
+          borderRadius: '12px'
+        }
+      });
+      return;
+    }
+    
+    if (!selectedWilaya) {
+      toast.error(t('errors.deliveryRequired'), {
+        description: t('errors.deliveryRequiredDescription'),
+        style: {
+          background: '#FF3333',
+          color: 'white',
+          borderRadius: '12px'
+        }
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    const selectedColorName = uniqueColors.find((color: {color: string, color_name: string}) => color.color === selectedColor)?.color_name || '';
+    
+    // Calculate price: ALWAYS use metre_price if it exists, otherwise use standard price
+    let itemPrice: number;
+    let calculationMethod = '';
+    
+    if (hasMetrePrice) {
+      if (longueur && parseFloat(longueur) > 0) {
+        // Use metre_price × longueur × quantity
+        itemPrice = metrePrice * parseFloat(longueur) * quantity;
+        calculationMethod = `${metrePrice.toFixed(2)}*${parseFloat(longueur)}*${quantity}`;
+      } else {
+        // Should not happen due to validation, but as fallback
+        itemPrice = 0;
+        calculationMethod = 'Prix au mètre (longueur manquante)';
       }
-    });
-    return;
-  }
-  
-  const metrePrice = parseFloat(product.metre_price || "0");
-  const standardPrice = parseFloat(product.price?.toString() || "0");
-  
-  // STRICTER VALIDATION for metre-priced products
-  if (metrePrice > 0 && (!longueur || parseFloat(longueur) <= 0)) {
-    toast.error(t('product.lengthRequired'), {
-      description: t('product.meterRequired'),
-      style: {
-        background: '#FF3333',
-        color: 'white',
-        borderRadius: '12px'
-      }
-    });
-    return;
-  }
-  
-  if (!selectedWilaya) {
-    toast.error(t('errors.deliveryRequired'), {
-      description: t('errors.deliveryRequiredDescription'),
-      style: {
-        background: '#FF3333',
-        color: 'white',
-        borderRadius: '12px'
-      }
-    });
-    return;
-  }
-  
-  setIsSubmitting(true);
-  
-  const selectedColorName = uniqueColors.find((color: {color: string, color_name: string}) => color.color === selectedColor)?.color_name || '';
-  
-  // Calculate item price - PRIORITIZE metre_price
-  let itemPrice: number;
-  let calculationMethod = '';
-  
-  if (metrePrice > 0 && longueur && parseFloat(longueur) > 0) {
-    // Use metre_price × longueur × quantity
-    itemPrice = metrePrice * parseFloat(longueur) * quantity;
-    calculationMethod = `${metrePrice} DA/m × ${longueur}m × ${quantity}`;
-  } else if (metrePrice > 0) {
-    // Should not happen due to validation above, but as fallback
-    itemPrice = 0;
-    calculationMethod = 'Prix au mètre (longueur manquante)';
-  } else {
-    // Use standard price × quantity
-    itemPrice = standardPrice * quantity;
-    calculationMethod = `${standardPrice} DA × ${quantity}`;
-  }
-  
-  // Calculate total with delivery
-  const finalPrice = itemPrice + deliveryPrice;
-  
-  // Create order item - convert price to string if needed
-  const orderItem: OrderItem = {
-    productname: product.name,
-    id: product.id.toString(),
-    price: itemPrice, // This is a number, allowed in updated interface
-    quantity: quantity,
-    image: currentImage,
-    color: selectedColorName,
-    longueur: longueur ? parseFloat(longueur) : undefined,
-    metre_price: product.metre_price || undefined,
-    unit_price: standardPrice,
-    metre_price_value: product.metre_price,
-    wilaya: selectedWilaya,
-    address: userData.address,
-    delivery_price: deliveryPrice,
-    total_price: finalPrice,
-    calculation: calculationMethod
-  };
-  
-  try {
-    // Save user data
-    const userDataToSave = {
-      ...userData,
-      wilaya: selectedWilaya
+    } else {
+      // Use standard price × quantity
+      itemPrice = standardPrice * quantity;
+      calculationMethod = `${standardPrice.toFixed(2)}*${quantity}`;
+    }
+    
+    // Total: item price + delivery_price
+    const finalPrice = itemPrice + deliveryPrice;
+    
+    // Create order item
+    const orderItem: OrderItem = {
+      productname: product.name,
+      id: product.id.toString(),
+      price: itemPrice,
+      quantity: quantity,
+      image: currentImage,
+      color: selectedColorName,
+      longueur: longueur ? parseFloat(longueur) : undefined,
+      metre_price: product.metre_price || undefined,
+      unit_price: hasMetrePrice ? metrePrice : standardPrice,
+      metre_price_value: product.metre_price,
+      wilaya: selectedWilaya,
+      address: userData.address,
+      delivery_price: deliveryPrice,
+      total_price: finalPrice,
+      calculation: calculationMethod
     };
-    localStorage.setItem("userData", JSON.stringify(userDataToSave));
     
-    await submitOrder([orderItem]);
-    
-    // Show success
-    showSuccessNotification();
-    setShowOrderForm(false);
-    setFormStep('details');
-    
-  } catch (error) {
-    toast.error(t('errors.orderFailed'), {
-      description: t('errors.orderFailedDescription'),
-      style: {
-        background: '#FF3333',
-        color: 'white',
-        borderRadius: '12px'
-      }
-    });
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+    try {
+      // Save user data
+      const userDataToSave = {
+        ...userData,
+        wilaya: selectedWilaya
+      };
+      localStorage.setItem("userData", JSON.stringify(userDataToSave));
+      
+      await submitOrder([orderItem]);
+      
+      // Show success
+      showSuccessNotification();
+      setShowOrderForm(false);
+      setFormStep('details');
+      
+    } catch (error) {
+      toast.error(t('errors.orderFailed'), {
+        description: t('errors.orderFailedDescription'),
+        style: {
+          background: '#FF3333',
+          color: 'white',
+          borderRadius: '12px'
+        }
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Image handlers
   const handleNextImage = () => {
     if (filteredImages.length === 0) return;
@@ -460,33 +452,12 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
     );
   }
 
-  // Get prices
-  const standardPrice = parseFloat(product.price?.toString() || "0");
-  const metrePrice = parseFloat(product.metre_price || "0");
-  
   // Calculate display product price
-  const displayProductPrice = (() => {
-    if (!product) return 0;
-    
-    // PRIORITIZE metre_price over standard price
-    if (metrePrice > 0) {
-      if (longueur && parseFloat(longueur) > 0) {
-        // Calculate using metre_price × longueur × quantity
-        return metrePrice * parseFloat(longueur) * quantity;
-      } else {
-        // Product has metre_price but no length yet
-        return 0;
-      }
-    } else {
-      // Regular product - use standard price × quantity
-      return standardPrice * quantity;
-    }
-  })();
+  const displayProductPrice = calculateProductPrice();
 
-  // Get price display text
+  // Get price display text - SAME LOGIC AS ProductCard
   const getPriceDisplay = () => {
-    // PRIORITIZE metre_price display
-    if (metrePrice > 0) {
+    if (hasMetrePrice) {
       if (longueur && parseFloat(longueur) > 0) {
         return `${metrePrice.toFixed(2)} DA/m × ${longueur}m × ${quantity}`;
       } else {
@@ -665,7 +636,7 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
                 </div>
               </div>
               
-              {/* Price Card - PRIORITIZE metre_price */}
+              {/* Price Card - SAME LOGIC AS ProductCard */}
               <div className="bg-black rounded-2xl shadow-xl p-6 border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <div>
@@ -673,36 +644,35 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
                       {displayProductPrice.toFixed(2)} <span className="text-lg">DA</span>
                     </div>
                     
-                    {/* Display metre_price prominently when available */}
-                    <div className="flex gap-4 mt-2 text-sm">
-                      {metrePrice > 0 ? (
-                        <div className="text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                          <span className="font-semibold">{t('product.mainPrice')}: {metrePrice.toFixed(2)} DA/m</span>
-                          {longueur && parseFloat(longueur) > 0 && (
-                            <span className="ml-2">(× {longueur}m × {quantity})</span>
-                          )}
+                    {/* Show price calculation - SAME LOGIC AS ProductCard */}
+                    <div className="mt-2 space-y-1">
+                      {hasMetrePrice ? (
+                        <div className="text-sm">
+                          <span className="text-blue-400 font-medium">Prix au mètre:</span>
+                          <span className="ml-2 font-bold text-white">{metrePrice.toFixed(2)} DA/m</span>
                         </div>
-                      ) : standardPrice > 0 ? (
-                        <div className="text-purple-600 bg-purple-50 px-3 py-1 rounded-full">
-                          <span className="font-semibold">{t('product.unitPrice')}: {standardPrice.toFixed(2)} DA</span>
+                      ) : (
+                        <div className="text-sm">
+                          <span className="text-gray-400">Prix unitaire:</span>
+                          <span className="ml-2 font-medium text-white">{standardPrice.toFixed(2)} DA</span>
                         </div>
-                      ) : null}
+                      )}
                     </div>
                     
-                    {/* Show price breakdown */}
+                    {/* Show calculation formula */}
                     <div className="text-sm text-green-600 mt-1">
                       {getPriceDisplay()}
                     </div>
                     
                     {/* Warnings or info messages */}
-                    {metrePrice > 0 && !longueur && (
+                    {hasMetrePrice && !longueur && (
                       <div className="text-sm text-yellow-600 mt-1">
                         ⚠️ {t('product.lengthWarning')}
                       </div>
                     )}
                     
                     {/* Show standard price as reference if metre_price exists */}
-                    {metrePrice > 0 && standardPrice > 0 && (
+                    {hasMetrePrice && standardPrice > 0 && (
                       <div className="text-sm text-gray-500 mt-1">
                         ({t('product.referencePrice')}: {standardPrice.toFixed(2)} DA)
                       </div>
@@ -718,7 +688,7 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
                 
                 <div className="space-y-3 text-sm">
                   {/* Show metre price first if available */}
-                  {metrePrice > 0 ? (
+                  {hasMetrePrice ? (
                     <>
                       <div className="flex justify-between items-center py-2 border-b border-gray-100">
                         <span className="text-gray-600 flex items-center gap-2">
@@ -760,7 +730,7 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
                       {/* Optional longueur for regular products */}
                       {longueur && parseFloat(longueur) > 0 && (
                         <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                          <span className="text-gray-600 font-medium">{t('product.customLengthRequired')}</span>
+                          <span className="text-gray-600 font-medium">{t('product.customLengthOptional')}</span>
                           <span className="text-white font-medium">{longueur} m</span>
                         </div>
                       )}
@@ -790,17 +760,17 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
                 </div>
               </div>
 
-              {/* Dimensions Input */}
+              {/* Dimensions Input - SAME LOGIC AS ProductCard */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                   <Ruler className="h-5 w-5" />
-                  {metrePrice > 0 ? t('product.dimensions') : t('product.customDimensions')}
+                  {hasMetrePrice ? t('product.dimensions') : t('product.customDimensions')}
                 </h3>
                 <div className="bg-black rounded-xl border border-gray-300 p-4">
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-white mb-2">
-                        {t('product.length')} {metrePrice > 0 ? <span className="text-red-500">*</span> : `(${t('common.optional')})`}
+                        {t('product.length')} {hasMetrePrice ? <span className="text-red-500">*</span> : `(${t('common.optional')})`}
                       </label>
                       <div className="relative">
                         <input
@@ -809,27 +779,39 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
                           onChange={(e) => {
                             const value = e.target.value;
                             setLongueur(value);
-                            // Recalculate price immediately when longueur changes
-                            if (product && metrePrice > 0 && value && parseFloat(value) > 0) {
-                              const itemPrice = metrePrice * parseFloat(value) * quantity;
-                              const finalTotal = itemPrice + deliveryPrice;
-                              setTotalPrice(finalTotal);
-                            }
+                            // Update price calculation immediately when longueur changes
+                            setTotalPrice(calculateTotalPrice());
                           }}
-                          placeholder={metrePrice > 0 ? t('product.enterLengthPlaceholder') : t('product.enterLengthOptional')}
+                          placeholder={hasMetrePrice ? t('product.enterLengthPlaceholder') : t('product.enterLengthOptional')}
                           className="w-full border border-gray-300 rounded-lg p-3 pl-10 text-white bg-black focus:ring-2 focus:ring-[#d6b66d] focus:border-transparent transition-colors"
-                          min={metrePrice > 0 ? "0.1" : "0"}
+                          min={hasMetrePrice ? "0.1" : "0"}
                           step="0.1"
                         />
                         <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                       </div>
                     </div>
                     <p className="text-sm text-gray-500">
-                      {metrePrice > 0 
+                      {hasMetrePrice 
                         ? t('product.priceCalculation', { price: metrePrice.toFixed(2), quantity })
                         : t('product.optionalLength')
                       }
                     </p>
+                    
+                    {/* Show detailed calculation - SAME LOGIC AS ProductCard */}
+                    {hasMetrePrice && longueur && parseFloat(longueur) > 0 && (
+                      <div className="mt-2 p-2 bg-black/50 rounded-lg">
+                        <p className="text-xs font-medium text-green-500 mb-1">Calcul détaillé:</p>
+                        <div className="text-xs text-green-400 space-y-1">
+                          <div>Prix au mètre: {metrePrice.toFixed(2)} DA</div>
+                          <div>Longueur: {longueur} m</div>
+                          <div>Quantité: {quantity}</div>
+                          <div className="pt-1 border-t border-green-800">
+                            <span className="font-bold">Total produit:</span> 
+                            {metrePrice.toFixed(2)} × {longueur} × {quantity} = <strong>{displayProductPrice.toFixed(2)} DA</strong>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -885,7 +867,7 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
                 </div>
               </div>
               
-              {/* Total Summary */}
+              {/* Total Summary - SAME LOGIC AS ProductCard */}
               <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl shadow-2xl p-6 text-white">
                 <h3 className="text-lg font-semibold mb-4">{t('product.totalSummary')}</h3>
                 <div className="space-y-3">
@@ -906,6 +888,18 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
                         {totalPrice.toFixed(2)} DA
                       </div>
                     </div>
+                    
+                    {/* Show calculation - SAME LOGIC AS ProductCard */}
+                    {hasMetrePrice && longueur && parseFloat(longueur) > 0 && (
+                      <div className="text-xs text-green-500 mt-2">
+                        ({metrePrice.toFixed(2)} × {longueur} × {quantity}) + {deliveryPrice.toFixed(2)} DA
+                      </div>
+                    )}
+                    {!hasMetrePrice && (
+                      <div className="text-xs text-gray-500 mt-2">
+                        ({standardPrice.toFixed(2)} × {quantity}) + {deliveryPrice.toFixed(2)} DA
+                      </div>
+                    )}
                   </div>
                 </div>
                 
@@ -915,7 +909,7 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
                     variant="outline"
                     className="flex-1 bg-black/10 text-white border-white/20 hover:bg-black/20 hover:text-white"
                     onClick={handleAddToCart}
-                    disabled={metrePrice > 0 && (!longueur || parseFloat(longueur) <= 0)}
+                    disabled={hasMetrePrice && (!longueur || parseFloat(longueur) <= 0)}
                   >
                     <ShoppingCart className="h-5 w-5 mr-2" />
                     {t('product.addToCart')}
@@ -926,16 +920,16 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
                     onClick={() => setShowOrderForm(true)}
                     disabled={
                       isSubmitting || 
-                      (metrePrice > 0 && (!longueur || parseFloat(longueur) <= 0)) || 
+                      (hasMetrePrice && (!longueur || parseFloat(longueur) <= 0)) || 
                       !selectedWilaya ||
-                      (metrePrice > 0 && displayProductPrice === 0)
+                      (hasMetrePrice && displayProductPrice === 0)
                     }
                   >
                     {t('product.orderNow')}
                   </Button>
                 </div>
 
-                {metrePrice > 0 && (!longueur || parseFloat(longueur) <= 0) && (
+                {hasMetrePrice && (!longueur || parseFloat(longueur) <= 0) && (
                   <p className="text-sm text-red-300 text-center mt-4">
                     ⚠️ {t('product.meterRequired')}
                   </p>
@@ -956,7 +950,7 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
         <Footer />
       </div>
 
-      {/* Order Form Modal */}
+      {/* Order Form Modal - SAME LOGIC AS ProductCard */}
       {showOrderForm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
           <div className="bg-black rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slideUp">
@@ -1000,7 +994,7 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
               </div>
             </div>
             
-            {/* Order Summary */}
+            {/* Order Summary - SAME LOGIC AS ProductCard */}
             <div className="p-6">
               <div className="bg-black rounded-xl p-4 mb-6">
                 <div className="flex items-start justify-between">
@@ -1011,12 +1005,29 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
                         {t('cart.color')}: {uniqueColors.find((color) => color.color === selectedColor)?.color_name || selectedColor}
                       </p>
                     )}
+                    
+                    {/* Price Information - Shows both metre_price and standard price */}
+                    <div className="mt-2 space-y-1">
+                      {hasMetrePrice && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-blue-400 font-medium">Prix au mètre:</span>
+                          <span className="text-lg font-bold text-white">{metrePrice.toFixed(2)} DA/m</span>
+                        </div>
+                      )}
+                      {standardPrice > 0 && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-400">Prix standard (référence):</span>
+                          <span className="text-sm font-medium text-gray-300">{standardPrice.toFixed(2)} DA</span>
+                        </div>
+                      )}
+                    </div>
+                    
                     {longueur && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 mt-1">
                         {t('product.length')}: {longueur}m
-                        {metrePrice > 0 && (
+                        {hasMetrePrice && (
                           <span className="text-green-600 ml-2">
-                            ({metrePrice} DA/m × {longueur}m × {quantity})
+                            ({metrePrice.toFixed(2)} DA/m × {longueur}m × {quantity})
                           </span>
                         )}
                       </p>
@@ -1029,9 +1040,16 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
                       <div className="text-sm text-gray-600">+ {deliveryPrice.toFixed(2)} DA {t('cart.delivery').toLowerCase()}</div>
                     )}
                     <div className="text-sm text-gray-600 mt-2">{t('common.total')}: {totalPrice.toFixed(2)} DA</div>
-                    {metrePrice > 0 && longueur && (
-                      <div className="text-xs text-blue-600 mt-1">
-                        {t('common.calculation')}: {metrePrice} DA/m × {longueur}m × {quantity} + {deliveryPrice.toFixed(2)} DA {t('cart.delivery').toLowerCase()}
+                    
+                    {/* Show calculation formula */}
+                    {hasMetrePrice && longueur && parseFloat(longueur) > 0 && (
+                      <div className="text-xs text-green-600 mt-1">
+                        {metrePrice.toFixed(2)} DA/m × {longueur}m × {quantity} + {deliveryPrice.toFixed(2)} DA
+                      </div>
+                    )}
+                    {!hasMetrePrice && (
+                      <div className="text-xs text-gray-600 mt-1">
+                        {standardPrice.toFixed(2)} DA × {quantity} + {deliveryPrice.toFixed(2)} DA
                       </div>
                     )}
                   </div>
@@ -1191,6 +1209,19 @@ const handleOrderSubmit = async (e: React.FormEvent) => {
                       <div className="flex justify-between items-center pt-3">
                         <span className="text-xl font-bold text-white">{t('common.total')}</span>
                         <span className="text-3xl font-bold text-[#d6b66d]">{totalPrice.toFixed(2)} DA</span>
+                      </div>
+                      
+                      {/* Show calculation - SAME LOGIC AS ProductCard */}
+                      <div className="text-sm text-gray-500 mt-2">
+                        {hasMetrePrice && longueur && parseFloat(longueur) > 0 ? (
+                          <div className="text-green-600">
+                            ({metrePrice.toFixed(2)} × {longueur} × {quantity}) + {deliveryPrice.toFixed(2)} DA
+                          </div>
+                        ) : !hasMetrePrice ? (
+                          <div>
+                            ({standardPrice.toFixed(2)} × {quantity}) + {deliveryPrice.toFixed(2)} DA
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                     
