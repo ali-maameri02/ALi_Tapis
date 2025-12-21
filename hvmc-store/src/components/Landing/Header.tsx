@@ -1,7 +1,7 @@
 import {  Search, ShoppingCart, User } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import logo from '@/assets/profile.png';
+import logo from '@/assets/profile-lreMy55m.png';
 import cover from '@/assets/cover page ali.jpg';
 import { useCart } from '../context/Cartcontext';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
