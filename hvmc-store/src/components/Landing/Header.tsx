@@ -1,8 +1,8 @@
-import {  Search, ShoppingCart, User } from "lucide-react";
+import { Search, ShoppingCart, User } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-// import logo from '@/assets/profile.png';
-import cover from '@/assets/cover page ali.jpg';
+import profileLogo from '@/assets/profile.png';
+import coverImage from '@/assets/cover page ali.jpg';
 import { useCart } from '../context/Cartcontext';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -83,15 +83,20 @@ export const Header = () => {
   );
 
   return (
-    <header className="bg-gradient-to-r from-black via-black to-zinc-900 text-white  w-full top-0 z-50 shadow-lg ">
+    <header className="bg-gradient-to-r from-black via-black to-zinc-900 text-white w-full top-0 z-50 shadow-lg">
       {/* Top Navigation Bar */}
       <div className="container mx-auto px-4 py-3 pb-0 flex justify-between items-center border-b border-zinc-800">
         <div className="flex items-center gap-4">
-          <Link to="/" className="flex items-center  gap-2">
-          <img src="/assets/profile-lreMy55m.png" width={150} alt="" />
-
-
-          <span className="font-light text-sm hidden md:block text-zinc-300">
+          <Link to="/" className="flex items-center gap-2">
+            {/* Use imported image */}
+            <img 
+              src={profileLogo} 
+              width={100} 
+              height={150} 
+              alt="Ali Tapis Logo"
+              className="h-auto"
+            />
+            <span className="font-light text-sm hidden md:block text-zinc-300">
               {t('header.title')}
             </span>
           </Link>
@@ -174,7 +179,6 @@ export const Header = () => {
                 align="end" 
                 className="w-56 bg-zinc-900 border-zinc-700 text-white"
               >
-               
                 <DropdownMenuItem 
                   className="hover:bg-zinc-800 cursor-pointer"
                   onClick={() => navigate('/orders')}
@@ -236,35 +240,36 @@ export const Header = () => {
 
       {/* Hero Section - Only on homepage */}
       {location.pathname === '/' && (
-  <div
-    className="
-      container mx-auto px-4 py-0 flex flex-col items-center mt-16 
-      bg-cover bg-center md:bg-top  
-      min-h-[50vh] md:min-h-[70vh] lg:h-100
-      relative
-    "
-    style={{
-      backgroundImage: `url(${cover})`,
-      backgroundRepeat: 'no-repeat',
-    }}
-  >
-    <p className="text-lg md:text-xl mb-8 text-center max-w-2xl text-zinc-300">
-      {t('home.subtitle')}
-    </p>
+        <div
+          className="
+            container mx-auto px-4 py-0 flex flex-col items-center mt-16 
+            bg-cover bg-center md:bg-top  
+            min-h-[50vh] md:min-h-[70vh] lg:h-100
+            relative
+          "
+          style={{
+            // Use imported image
+            backgroundImage: `url(${coverImage})`,
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
+          <p className="text-lg md:text-xl mb-8 text-center max-w-2xl text-zinc-300">
+            {t('home.subtitle')}
+          </p>
 
-    {/* Search Bar */}
-    <div className="relative w-full max-w-2xl ">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
-      <Input
-        type="search"
-        placeholder={t('home.searchPlaceholder')}
-        className="pl-10 py-6 rounded-full bg-zinc-100 border-0 focus-visible:ring-2 focus-visible:ring-primary/50 text-black"
-        value={searchQuery}
-        onChange={handleSearchChange}
-      />
-    </div>
-  </div>
-)}
+          {/* Search Bar */}
+          <div className="relative w-full max-w-2xl">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-400" />
+            <Input
+              type="search"
+              placeholder={t('home.searchPlaceholder')}
+              className="pl-10 py-6 rounded-full bg-zinc-100 border-0 focus-visible:ring-2 focus-visible:ring-primary/50 text-black"
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Auth Modal */}
       <AuthModal
