@@ -6,6 +6,8 @@ import { defineConfig } from "vite"
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  base: '/', // Ensure this is present
+
   build: {
     outDir: 'dist',
     emptyOutDir: true,
