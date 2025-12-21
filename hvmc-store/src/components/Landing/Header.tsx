@@ -1,7 +1,7 @@
 import {  Search, ShoppingCart, User } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import logo from '@/assets/profile.png';
+// import logo from '@/assets/profile.png';
 import cover from '@/assets/cover page ali.jpg';
 import { useCart } from '../context/Cartcontext';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -88,7 +88,7 @@ export const Header = () => {
       <div className="container mx-auto px-4 py-3 pb-0 flex justify-between items-center border-b border-zinc-800">
         <div className="flex items-center gap-4">
           <Link to="/" className="flex items-center  gap-2">
-<img src={logo} width={100} height={150} />
+          <img src="/assets/profile-lreMy55m.png" width={150} alt="" />
 
 
           <span className="font-light text-sm hidden md:block text-zinc-300">
